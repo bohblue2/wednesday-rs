@@ -1,5 +1,5 @@
 use serde::Serialize;
-use wednesday_macro::{AsUrlParams, DeExchange, DeSubscriptionKind, SerExchange, SerSubscriptionKind};
+use wednesday_macro::AsUrlParams;
 
 // Define a struct to test AsUrlParams
 #[derive(Serialize, AsUrlParams)]
@@ -13,7 +13,6 @@ struct UrlParam {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json;
 
     #[test]
     fn test_as_url_params() {

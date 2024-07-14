@@ -1,5 +1,5 @@
 use tokio::sync::mpsc;
-use tracing::{event, warn};
+use tracing::warn;
 use wednesday_model::events::{DataKind, MarketEvent};
 
 use super::{
@@ -68,7 +68,7 @@ impl MessageTransmitter<Event> for EventTx {
         }
 
         messages.into_iter().for_each(|message| {
-            self.event_tx.send(message);
+            let _ = self.event_tx.send(message);
         })
     }
 }

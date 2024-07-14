@@ -1,12 +1,9 @@
-use std::{collections::HashMap, iter::Product, path::Component, sync::Arc, thread, time::Duration};
+use std::{collections::HashMap, sync::Arc, thread, time::Duration};
 
 use parking_lot::Mutex;
 use prettytable::Table;
 use serde::Serialize;
-use tokio::{
-    runtime::Handle,
-    sync::{mpsc, oneshot},
-};
+use tokio::sync::{mpsc, oneshot};
 use tracing::{error, info, warn};
 use uuid::Uuid;
 use wednesday_model::{
@@ -19,7 +16,7 @@ use crate::{
     execution::ExecutionClient,
     model::{
         engine_error::EngineError,
-        event::{Event, EventTx, MessageTransmitter},
+        event::{Event, MessageTransmitter},
         position::Position,
     },
     portfolio::{
@@ -27,7 +24,7 @@ use crate::{
         repository::{PositionHandler, StatisticHandler},
         updater::{FillUpdater, MarketUpdater},
     },
-    statistic::summary::{self, combine, PositionSummariser, TableBuilder},
+    statistic::summary::{combine, PositionSummariser, TableBuilder},
     strategy::SignalGenerator,
 };
 

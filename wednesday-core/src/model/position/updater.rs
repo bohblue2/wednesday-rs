@@ -32,6 +32,7 @@ pub trait PositionUpdater {
     fn update(&mut self, market: &MarketEvent<DataKind>) -> Option<PositionUpdate>;
 }
 
+#[allow(unreachable_patterns)]
 impl PositionUpdater for Position {
     fn update(&mut self, market: &MarketEvent<DataKind>) -> Option<PositionUpdate> {
         // Determine close from MarketEvent

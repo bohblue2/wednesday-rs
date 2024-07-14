@@ -1,8 +1,7 @@
-use std::{collections::HashMap, marker::PhantomData, os::macos::raw::stat};
+use std::{collections::HashMap, marker::PhantomData};
 
 use chrono::Utc;
-use futures::{future::ok, stream::All};
-use ta::indicators::Minimum;
+
 use tracing::info;
 use uuid::Uuid;
 use wednesday_model::{
@@ -13,11 +12,11 @@ use wednesday_model::{
 
 use crate::{
     model::{
-        balance::{self, Balance},
+        balance::Balance,
         decision::Decision,
         event::Event,
         fill_event::FillEvent,
-        market_meta::{self, MarketMeta},
+        market_meta::MarketMeta,
         order_event::OrderEvent,
         portfolio_error::PortfolioError,
         position::{
@@ -31,10 +30,7 @@ use crate::{
         signal::SignalStrength,
     },
     oms::{allocator::OrderAllocator, evaluator::OrderEvaluator},
-    statistic::{
-        self,
-        summary::{Initialiser, PositionSummariser},
-    },
+    statistic::summary::{Initialiser, PositionSummariser},
 };
 
 use self::{
@@ -207,7 +203,7 @@ where
                 stats.update(&position);
 
                 // Persist exited Position & Update Market statistics in Repository
-                self.repository.set_statistics(market_id, stats);
+                let _ = self.repository.set_statistics(market_id, stats);
                 self.repository.set_exited_position(self.engine_id, position)?;
             },
             // ENTRY SCENARIO - FillEvent for Symbol-Exchange with no position
@@ -260,7 +256,7 @@ where
         self.repository.set_exited_position(self.engine_id, position)
     }
 
-    fn get_exited_positions(&mut self, engine_id: Uuid) -> Result<Vec<Position>, RepositoryError> {
+    fn get_exited_positions(&mut self, _engine_id: Uuid) -> Result<Vec<Position>, RepositoryError> {
         self.repository.get_exited_positions(self.engine_id)
     }
 }

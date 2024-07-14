@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use chrono::Utc;
-use ta::{indicators::RelativeStrengthIndex, Next};
+use ta::indicators::RelativeStrengthIndex;
 use tracing::debug;
 use wednesday_model::events::{DataKind, MarketEvent};
 
@@ -17,6 +17,7 @@ pub struct TickReactStrategyConfig {
     pub rsi_period: usize,
 }
 
+#[allow(dead_code)]
 pub struct TickReactStrategy {
     rsi: RelativeStrengthIndex,
 }
@@ -24,7 +25,7 @@ pub struct TickReactStrategy {
 impl SignalGenerator for TickReactStrategy {
     fn generate_signal(&mut self, market: &MarketEvent<DataKind>) -> Option<Signal> {
         let last_trade_price = match &market.kind {
-            DataKind::Bar(candle) => return None,
+            DataKind::Bar(_candle) => return None,
             DataKind::PublicTrade(trade) => {
                 debug!("PublicTrade: {:?}", trade.price);
                 trade.price

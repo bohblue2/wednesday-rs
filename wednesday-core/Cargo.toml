@@ -5,8 +5,13 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lints.clippy]
+unused_must_use = "allow"
+
+
 [dependencies]
 wednesday-model.workspace = true
+clippy.workspace = true
 
 # Logging
 tracing = "0.1.36"

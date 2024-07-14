@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use uuid::{timestamp, Uuid};
+use uuid::Uuid;
 
 #[derive(Debug, Copy, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Balance {

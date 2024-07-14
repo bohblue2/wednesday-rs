@@ -2,20 +2,18 @@ use std::{collections::VecDeque, marker::PhantomData, sync::Arc};
 
 use parking_lot::Mutex;
 use serde::Serialize;
-use tokio::{io::Empty, sync::mpsc};
+use tokio::sync::mpsc;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
 use wednesday_model::{
     events::{DataKind, MarketEvent},
     identifiers::Market,
-    order,
 };
 
 use crate::{
     data::FeedGenerator,
     execution::ExecutionClient,
     model::{
-        engine_error::EngineError,
         enums::Feed,
         event::{Event, MessageTransmitter},
         signal::SignalForceExit,
@@ -120,7 +118,7 @@ where
             // Check for new remote commands before continuing to generate another MarketEvent
             while let Some(command) = self.receive_remote_command() {
                 match command {
-                    EngineCommand::Terminate(reasone) => break 'trading,
+                    EngineCommand::Terminate(_reasone) => break 'trading,
                     EngineCommand::ExitPosition(market) => self.event_q.push_back(Event::SignalForceExit(SignalForceExit::from(market))),
                     // otherwise => continue
                     _ => continue,
