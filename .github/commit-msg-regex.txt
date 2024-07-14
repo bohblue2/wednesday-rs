@@ -1,0 +1,1 @@
+(Merge branch.*)|(Feat\/.*)|((feat|fix|refactor|style|docs|test|chore):.{1,75}(\n.{1,200})?)

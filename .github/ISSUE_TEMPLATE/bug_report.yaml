@@ -1,0 +1,32 @@
+# Please check the following issues for additional information: https://github.com/TearsStreams/wednesday/issues/7
+name: 🐛 Bug Report
+description: Create a report to help us improve wednesday project
+title: 'bug: '
+body:
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: Current Behavior
+      description: A clear description of what the bug is and how it manifests.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: A clear description of what you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Please explain the steps required to duplicate this issue.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true

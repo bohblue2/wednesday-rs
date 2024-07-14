@@ -1,0 +1,28 @@
+[workspace]
+members = [ 
+    "wednesday-bootstrap", 
+    "wednesday-connector", 
+    "wednesday-core", 
+    "wednesday-macro", 
+    "wednesday-model", 
+]
+resolver = "2"
+
+[workspace.dependencies]
+pcap-file = "2.0.0"
+thiserror = "1.0.57"
+anyhow = "1.0.41"
+log = "0.4"
+log4rs = "1.0"
+rand = "0.8.4"
+
+tokio = { version = "1.20.1", features = ["sync", "macros", "rt-multi-thread"] }
+tokio-stream = { version = "0.1.9", features = ["sync"] }
+
+matching_engine = { git = "https://github.com/TearsStreams/matching_engine.git", tag = "0.0.1"}
+
+wednesday-bootstrap = { path = "wednesday-bootstrap" }
+wednesday-connector = { path = "wednesday-connector" }
+wednesday-core ={ path = "wednesday-core" }
+wednesday-macro = { path = "wednesday-macro" }
+wednesday-model = { path = "wednesday-model" }
