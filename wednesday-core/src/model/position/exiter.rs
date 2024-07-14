@@ -1,10 +1,14 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::model::{balance::Balance, fee::{FeeAmount, Fees}, fill_event::FillEvent, portfolio_error::PortfolioError};
+use crate::model::{
+    balance::Balance,
+    fee::{FeeAmount, Fees},
+    fill_event::FillEvent,
+    portfolio_error::PortfolioError,
+};
 
 use super::Position;
-
 
 /// Exits an open [`Position`].
 pub trait PositionExiter {
@@ -47,10 +51,7 @@ impl TryFrom<&mut Position> for PositionExit {
         Ok(Self {
             position_id: exited_position.position_id.clone(),
             exit_time: exited_position.meta.update_timestamp,
-            exit_balance: exited_position
-                .meta
-                .exit_balance
-                .ok_or(PortfolioError::PositionExit)?,
+            exit_balance: exited_position.meta.exit_balance.ok_or(PortfolioError::PositionExit)?,
             exit_fees: exited_position.exit_fees,
             exit_fees_total: exited_position.exit_fees_total,
             exit_avg_price_gross: exited_position.exit_avg_price_gross,
@@ -60,13 +61,8 @@ impl TryFrom<&mut Position> for PositionExit {
     }
 }
 
-
 impl PositionExiter for Position {
-    fn exit(
-        &mut self,
-        mut balance: Balance,
-        fill: &FillEvent,
-    ) -> Result<PositionExit, PortfolioError> {
+    fn exit(&mut self, mut balance: Balance, fill: &FillEvent) -> Result<PositionExit, PortfolioError> {
         if fill.decision.is_entry() {
             return Err(PortfolioError::CannotExitPositionWithEntryFill);
         }

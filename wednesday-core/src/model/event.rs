@@ -2,7 +2,13 @@ use tokio::sync::mpsc;
 use tracing::{event, warn};
 use wednesday_model::events::{DataKind, MarketEvent};
 
-use super::{balance::Balance, fill_event::FillEvent, order_event::OrderEvent, position::{exiter::PositionExit, updater::PositionUpdate, Position}, signal::{Signal, SignalForceExit}};
+use super::{
+    balance::Balance,
+    fill_event::FillEvent,
+    order_event::OrderEvent,
+    position::{exiter::PositionExit, updater::PositionUpdate, Position},
+    signal::{Signal, SignalForceExit},
+};
 
 #[derive(Debug)]
 pub enum Event {
@@ -22,14 +28,14 @@ pub enum Event {
 pub struct EventTx {
     receiver_dropped: bool,
 
-    event_tx: mpsc::UnboundedSender<Event>
+    event_tx: mpsc::UnboundedSender<Event>,
 }
 
 impl EventTx {
     pub fn new(event_tx: mpsc::UnboundedSender<Event>) -> Self {
         Self {
             receiver_dropped: false,
-            event_tx
+            event_tx,
         }
     }
 }
@@ -43,9 +49,9 @@ pub trait MessageTransmitter<Message> {
 impl MessageTransmitter<Event> for EventTx {
     fn send(&mut self, message: Event) {
         if self.receiver_dropped {
-            return ;
+            return;
         }
-        
+
         if self.event_tx.send(message).is_err() {
             warn!(
                 action = "setting receiver_dropped = true",
@@ -58,7 +64,7 @@ impl MessageTransmitter<Event> for EventTx {
 
     fn send_many(&mut self, messages: Vec<Event>) {
         if self.receiver_dropped {
-            return ;
+            return;
         }
 
         messages.into_iter().for_each(|message| {

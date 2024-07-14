@@ -1,6 +1,10 @@
-use crate::{model::position::{Position, PositionSide}, statistic::{
-        converter::{de_duration_from_secs, se_duration_as_secs}, summary::{data::DataSummary, Initialiser, PositionSummariser, TableBuilder}
-    }};
+use crate::{
+    model::position::{Position, PositionSide},
+    statistic::{
+        converter::{de_duration_from_secs, se_duration_as_secs},
+        summary::{data::DataSummary, Initialiser, PositionSummariser, TableBuilder},
+    },
+};
 use chrono::{DateTime, Duration, Utc};
 use prettytable::{row, Row};
 use serde::{Deserialize, Serialize};
@@ -8,10 +12,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug, Deserialize, Serialize)]
 pub struct PnLReturnSummary {
     pub timestamp: DateTime<Utc>,
-    #[serde(
-        deserialize_with = "de_duration_from_secs",
-        serialize_with = "se_duration_as_secs"
-    )]
+    #[serde(deserialize_with = "de_duration_from_secs", serialize_with = "se_duration_as_secs")]
     pub duration: Duration,
     pub trades_per_day: f64,
     pub total: DataSummary,
@@ -113,14 +114,13 @@ impl PnLReturnSummary {
             None => {
                 // Since Position is not exited, estimate duration w/ last_update_time
                 position.meta.update_timestamp.signed_duration_since(self.timestamp)
-            }
+            },
             Some(exit_balance) => exit_balance.timestamp.signed_duration_since(self.timestamp),
         }
     }
 
     pub fn update_trades_per_day(&mut self) {
-        self.trades_per_day = self.total.count as f64
-            / (self.duration.num_seconds() as f64 / PnLReturnSummary::SECONDS_IN_DAY)
+        self.trades_per_day = self.total.count as f64 / (self.duration.num_seconds() as f64 / PnLReturnSummary::SECONDS_IN_DAY)
     }
 }
 
@@ -148,12 +148,12 @@ impl PositionSummariser for ProfitLossSummary {
                 self.long_contracts += position.quantity.abs();
                 self.long_pnl += position.realised_profit_loss;
                 self.long_pnl_per_contract = self.long_pnl / self.long_contracts;
-            }
+            },
             PositionSide::Sell => {
                 self.short_contracts += position.quantity.abs();
                 self.short_pnl += position.realised_profit_loss;
                 self.short_pnl_per_contract = self.short_pnl / self.short_contracts;
-            }
+            },
         }
     }
 }

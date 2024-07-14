@@ -1,8 +1,8 @@
 use async_trait::async_trait;
-use futures::StreamExt;
 use futures::SinkExt;
+use futures::StreamExt;
 use tokio::sync::mpsc;
-use tracing::{info, error, debug};
+use tracing::{debug, error, info};
 use wednesday_model::error::DataError;
 use wednesday_model::identifiers::ExchangeId;
 use wednesday_model::identifiers::Identifier;
@@ -29,33 +29,25 @@ impl<Exchange, Kind, Transformer> MarketStream<Exchange, Kind> for ExchangeWsStr
 where
     Exchange: Connector + Send + Sync,
     Kind: SubscriptionKind + Send + Sync,
-    Transformer: ExchangeTransformer<Exchange, Kind> + Send, 
+    Transformer: ExchangeTransformer<Exchange, Kind> + Send,
     Transformer::Pong: Debug,
     Kind::Event: Send,
 {
     async fn init(subscriptions: &[Subscription<Exchange, Kind>]) -> Result<Self, DataError>
     where
-        Subscription<Exchange, Kind>: Identifier<Exchange::Channel> + Identifier<Exchange::Market>
+        Subscription<Exchange, Kind>: Identifier<Exchange::Channel> + Identifier<Exchange::Market>,
     {
         let (ws, map) = Exchange::Subscriber::subscribe(subscriptions).await?;
         let (ws_sink, ws_stream) = ws.split();
-        let(ws_sink_tx, ws_sink_rx) = mpsc::unbounded_channel();
+        let (ws_sink_tx, ws_sink_rx) = mpsc::unbounded_channel();
 
-        tokio::spawn(distribute_messages_to_exchange(
-            Exchange::ID,
-            ws_sink,
-            ws_sink_rx
-        ));
+        tokio::spawn(distribute_messages_to_exchange(Exchange::ID, ws_sink, ws_sink_rx));
         debug!(exchange=%Exchange::ID, "Spawned task to distribute messages to exchange with WebSocket sink and receiver");
 
         if let Some(ping_interval) = Exchange::ping_interval() {
             debug!(exchange=%Exchange::ID,
                 "Spawned task to schedule pings to exchange with specified ping interval");
-            tokio::spawn(schedule_pings_to_exchange(
-                Exchange::ID,
-                ws_sink_tx.clone(),
-                ping_interval
-            ));
+            tokio::spawn(schedule_pings_to_exchange(Exchange::ID, ws_sink_tx.clone(), ping_interval));
         } else {
             debug!(exchange=%Exchange::ID, "No ping interval specified for exchange, skipping ping scheduling");
         }
@@ -67,10 +59,10 @@ where
 }
 
 pub async fn distribute_messages_to_exchange(
-    exchange: ExchangeId, 
-    mut ws_sink: WsSink, 
-    mut ws_sink_rx: mpsc::UnboundedReceiver<WsMessage>)
-{
+    exchange: ExchangeId,
+    mut ws_sink: WsSink,
+    mut ws_sink_rx: mpsc::UnboundedReceiver<WsMessage>,
+) {
     while let Some(message) = ws_sink_rx.recv().await {
         if let Err(error) = ws_sink.send(message).await {
             if is_ws_disconnected(&error) {
@@ -84,10 +76,10 @@ pub async fn distribute_messages_to_exchange(
 }
 
 pub async fn schedule_pings_to_exchange(
-    exchange_id: ExchangeId, 
-    ws_sink_tx: mpsc::UnboundedSender<WsMessage>, 
-    PingInterval { mut interval, ping}: PingInterval)
-{
+    exchange_id: ExchangeId,
+    ws_sink_tx: mpsc::UnboundedSender<WsMessage>,
+    PingInterval { mut interval, ping }: PingInterval,
+) {
     loop {
         interval.tick().await;
 

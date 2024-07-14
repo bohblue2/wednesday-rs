@@ -1,11 +1,10 @@
-
 #[derive(Debug, Hash, Clone, Copy, PartialEq, Eq)]
 pub enum Decision {
-    Long, 
+    Long,
     CloseLong,
     Short,
     CloseShort,
-    Hold 
+    Hold,
 }
 
 impl Default for Decision {

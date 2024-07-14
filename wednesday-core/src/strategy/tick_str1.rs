@@ -5,7 +5,11 @@ use ta::{indicators::RelativeStrengthIndex, Next};
 use tracing::debug;
 use wednesday_model::events::{DataKind, MarketEvent};
 
-use crate::model::{decision::Decision, market_meta::MarketMeta, signal::{Signal, SignalStrength}};
+use crate::model::{
+    decision::Decision,
+    market_meta::MarketMeta,
+    signal::{Signal, SignalStrength},
+};
 
 use super::SignalGenerator;
 
@@ -21,8 +25,11 @@ impl SignalGenerator for TickReactStrategy {
     fn generate_signal(&mut self, market: &MarketEvent<DataKind>) -> Option<Signal> {
         let last_trade_price = match &market.kind {
             DataKind::Bar(candle) => return None,
-            DataKind::PublicTrade(trade) => { debug!("PublicTrade: {:?}", trade.price); trade.price }
-            _ => return None
+            DataKind::PublicTrade(trade) => {
+                debug!("PublicTrade: {:?}", trade.price);
+                trade.price
+            },
+            _ => return None,
         };
 
         let signals = self.generate_signals_map(last_trade_price);
@@ -33,7 +40,7 @@ impl SignalGenerator for TickReactStrategy {
             instrument: market.instrument.clone(),
             market_meta: MarketMeta {
                 close: last_trade_price,
-                timestamp: market.exchange_ts
+                timestamp: market.exchange_ts,
             },
             signals: signals,
         })
@@ -43,9 +50,7 @@ impl SignalGenerator for TickReactStrategy {
 impl TickReactStrategy {
     pub fn new(config: TickReactStrategyConfig) -> Self {
         let rsi = RelativeStrengthIndex::new(config.rsi_period).unwrap();
-        Self {
-            rsi: rsi
-        }
+        Self { rsi: rsi }
     }
 
     pub fn generate_signals_map(&self, rsi: f64) -> HashMap<Decision, SignalStrength> {

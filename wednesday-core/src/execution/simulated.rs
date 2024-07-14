@@ -5,10 +5,9 @@ use crate::model::{fee::Fees, fill_event::FillEvent};
 
 use super::ExecutionClient;
 
-
 pub struct SimExecConfig {
     /// Simulated Fee percentage to be used for each ['Fees'] field in decimal from (eg/ 0.01 for 1%)
-    pub simulated_fees_pct: Fees
+    pub simulated_fees_pct: Fees,
 }
 
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug, Default, Deserialize, Serialize)]
@@ -18,10 +17,10 @@ pub struct SimulatedExecution {
 
 impl ExecutionClient for SimulatedExecution {
     fn generate_fill(
-        &self, 
-        order: &crate::model::order_event::OrderEvent
+        &self,
+        order: &crate::model::order_event::OrderEvent,
     ) -> Result<crate::model::fill_event::FillEvent, crate::model::execution_error::ExecutionError> {
-        let fill_value_gross = SimulatedExecution::calculate_fill_value_gross(order); 
+        let fill_value_gross = SimulatedExecution::calculate_fill_value_gross(order);
 
         Ok(FillEvent {
             // NOTE: timestamp 에서 local_ts, exchange_ts 를 쓰는게 맞지 않나 ?
@@ -40,10 +39,10 @@ impl ExecutionClient for SimulatedExecution {
 impl SimulatedExecution {
     pub fn new(config: SimExecConfig) -> Self {
         Self {
-            fees_pct: config.simulated_fees_pct
+            fees_pct: config.simulated_fees_pct,
         }
     }
-    
+
     fn calculate_fill_value_gross(order: &crate::model::order_event::OrderEvent) -> f64 {
         // NOTE: 이부분 jarvis 랑 비슷한 패턴이내. 오더가 가격정보 실시간 물고있는거
         order.quantity.abs() * order.market_meta.close
@@ -55,7 +54,7 @@ impl SimulatedExecution {
             slippage: self.fees_pct.slippage * fill_value_gross,
             // network: self.fees_pct.network * fill_value_gross,
         }
-    } 
+    }
 }
 
 // NOTE: Commented in purpose.

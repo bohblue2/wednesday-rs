@@ -1,11 +1,11 @@
 use wednesday_model::{identifiers::Exchange, instruments::Instrument};
 
-use crate::model::{fee::{FeeAmount, Fees}, portfolio_error::PortfolioError};
+use crate::model::{
+    fee::{FeeAmount, Fees},
+    portfolio_error::PortfolioError,
+};
 
 use super::{Position, PositionId, PositionMeta, PositionSide};
-
-
-
 
 /// Builder to construct [`Position`] instances.
 #[derive(Debug, Default)]
@@ -57,17 +57,11 @@ impl PositionBuilder {
     }
 
     pub fn meta(self, value: PositionMeta) -> Self {
-        Self {
-            meta: Some(value),
-            ..self
-        }
+        Self { meta: Some(value), ..self }
     }
 
     pub fn side(self, value: PositionSide) -> Self {
-        Self {
-            side: Some(value),
-            ..self
-        }
+        Self { side: Some(value), ..self }
     }
 
     pub fn quantity(self, value: f64) -> Self {
@@ -163,44 +157,26 @@ impl PositionBuilder {
 
     pub fn build(self) -> Result<Position, PortfolioError> {
         Ok(Position {
-            position_id: self
-                .position_id
-                .ok_or(PortfolioError::BuilderIncomplete("position_id"))?,
-            exchange: self
-                .exchange
-                .ok_or(PortfolioError::BuilderIncomplete("exchange"))?,
-            instrument: self
-                .instrument
-                .ok_or(PortfolioError::BuilderIncomplete("instrument"))?,
+            position_id: self.position_id.ok_or(PortfolioError::BuilderIncomplete("position_id"))?,
+            exchange: self.exchange.ok_or(PortfolioError::BuilderIncomplete("exchange"))?,
+            instrument: self.instrument.ok_or(PortfolioError::BuilderIncomplete("instrument"))?,
             meta: self.meta.ok_or(PortfolioError::BuilderIncomplete("meta"))?,
             side: self.side.ok_or(PortfolioError::BuilderIncomplete("side"))?,
-            quantity: self
-                .quantity
-                .ok_or(PortfolioError::BuilderIncomplete("quantity"))?,
-            enter_fees: self
-                .enter_fees
-                .ok_or(PortfolioError::BuilderIncomplete("enter_fees"))?,
-            enter_fees_total: self
-                .enter_fees_total
-                .ok_or(PortfolioError::BuilderIncomplete("enter_fees_total"))?,
+            quantity: self.quantity.ok_or(PortfolioError::BuilderIncomplete("quantity"))?,
+            enter_fees: self.enter_fees.ok_or(PortfolioError::BuilderIncomplete("enter_fees"))?,
+            enter_fees_total: self.enter_fees_total.ok_or(PortfolioError::BuilderIncomplete("enter_fees_total"))?,
             enter_avg_price_gross: self
                 .enter_avg_price_gross
                 .ok_or(PortfolioError::BuilderIncomplete("enter_avg_price_gross"))?,
             enter_value_gross: self
                 .enter_value_gross
                 .ok_or(PortfolioError::BuilderIncomplete("enter_value_gross"))?,
-            exit_fees: self
-                .exit_fees
-                .ok_or(PortfolioError::BuilderIncomplete("exit_fees"))?,
-            exit_fees_total: self
-                .exit_fees_total
-                .ok_or(PortfolioError::BuilderIncomplete("exit_fees_total"))?,
+            exit_fees: self.exit_fees.ok_or(PortfolioError::BuilderIncomplete("exit_fees"))?,
+            exit_fees_total: self.exit_fees_total.ok_or(PortfolioError::BuilderIncomplete("exit_fees_total"))?,
             exit_avg_price_gross: self
                 .exit_avg_price_gross
                 .ok_or(PortfolioError::BuilderIncomplete("exit_avg_price_gross"))?,
-            exit_value_gross: self
-                .exit_value_gross
-                .ok_or(PortfolioError::BuilderIncomplete("exit_value_gross"))?,
+            exit_value_gross: self.exit_value_gross.ok_or(PortfolioError::BuilderIncomplete("exit_value_gross"))?,
             current_symbol_price: self
                 .current_symbol_price
                 .ok_or(PortfolioError::BuilderIncomplete("current_symbol_price"))?,

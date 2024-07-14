@@ -15,11 +15,7 @@ pub trait HttpRequestBuilder {
     ///
     /// It is expected that any signing or performed during this method, or the addition of any
     /// `reqwest` headers.
-    fn build<Request>(
-        &self,
-        request: Request,
-        builder: reqwest::RequestBuilder,
-    ) -> Result<reqwest::Request, SocketError>
+    fn build<Request>(&self, request: Request, builder: reqwest::RequestBuilder) -> Result<reqwest::Request, SocketError>
     where
         Request: RestRequest;
 }

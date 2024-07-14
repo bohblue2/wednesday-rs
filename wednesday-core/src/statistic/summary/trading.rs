@@ -1,11 +1,9 @@
 use crate::{
-    model::position::Position, statistic::{
+    model::position::Position,
+    statistic::{
         metric::ratio::{CalmarRatio, Ratio, SharpeRatio, SortinoRatio},
-        summary::{
-            drawdown::DrawdownSummary, pnl::PnLReturnSummary, Initialiser, PositionSummariser,
-            TableBuilder,
-        },
-    }
+        summary::{drawdown::DrawdownSummary, pnl::PnLReturnSummary, Initialiser, PositionSummariser, TableBuilder},
+    },
 };
 use chrono::{DateTime, Duration, Utc};
 use prettytable::{row, Cell, Row};
@@ -103,8 +101,7 @@ impl TearSheet {
     pub fn update(&mut self, pnl_returns: &PnLReturnSummary, drawdown: &DrawdownSummary) {
         self.sharpe_ratio.update(pnl_returns);
         self.sortino_ratio.update(pnl_returns);
-        self.calmar_ratio
-            .update(pnl_returns, drawdown.max_drawdown.drawdown.drawdown);
+        self.calmar_ratio.update(pnl_returns, drawdown.max_drawdown.drawdown.drawdown);
     }
 }
 
@@ -127,7 +124,7 @@ pub fn calculate_trading_duration(start_time: &DateTime<Utc>, position: &Positio
         None => {
             // Since Position is not exited, estimate duration w/ last_update_time
             position.meta.update_timestamp.signed_duration_since(*start_time)
-        }
+        },
         Some(exit_balance) => exit_balance.timestamp.signed_duration_since(*start_time),
     }
 }

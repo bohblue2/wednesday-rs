@@ -1,14 +1,15 @@
 use bytes::Bytes;
 use chrono::Utc;
+use std::borrow::Cow;
 use tracing::debug;
 use wednesday_model::error::SocketError;
-use std::borrow::Cow;
 
-use crate::protocol::{http::{builder::HttpRequestBuilder, parser::HttpParser}, metric::{Field, Metric, Tag}};
+use crate::protocol::{
+    http::{builder::HttpRequestBuilder, parser::HttpParser},
+    metric::{Field, Metric, Tag},
+};
 
 use super::request::RestRequest;
-use crate::protocol::http::rest::request::AsUrlParams;
-
 
 /// Configurable REST client capable of executing signed [`RestRequest`]s. Use this when
 /// integrating APIs that require Http in order to interact with resources. Each API will require
@@ -43,10 +44,7 @@ where
     Parser: HttpParser,
 {
     /// Execute the provided [`RestRequest`].
-    pub async fn execute<Request>(
-        &self,
-        request: Request,
-    ) -> Result<(Request::Response, Metric), Parser::OutputError>
+    pub async fn execute<Request>(&self, request: Request) -> Result<(Request::Response, Metric), Parser::OutputError>
     where
         Request: RestRequest,
     {
@@ -83,13 +81,8 @@ where
         let url = format!("{}{}", self.base_url, request.path());
 
         // Construct RequestBuilder with method & url
-        let mut builder = self
-            .http_client
-            .request(Request::method(), url)
-            .timeout(Request::timeout());
+        let builder = self.http_client.request(Request::method(), url).timeout(Request::timeout());
 
-
-            
         // // Add optional query parameters
         // if let Some(query_params) = request.query_params() {
         //     builder = builder.query(query_params);
@@ -105,16 +98,12 @@ where
 
         // Use RequestBuilder (public or private strategy) to build reqwest::Request
         self.strategy.build(request, builder)
-
     }
 
     /// Execute the built [`reqwest::Request`] using the [`reqwest::Client`].
     ///
     /// Measures and returns the Http request round trip duration.
-    pub async fn measured_execution<Request>(
-        &self,
-        request: reqwest::Request,
-    ) -> Result<(reqwest::StatusCode, Bytes, Metric), SocketError>
+    pub async fn measured_execution<Request>(&self, request: reqwest::Request) -> Result<(reqwest::StatusCode, Bytes, Metric), SocketError>
     where
         Request: RestRequest,
     {
@@ -136,9 +125,7 @@ where
         let duration = start.elapsed().as_millis() as u64;
 
         // Update Metric with response status and request duration
-        latency
-            .tags
-            .push(Tag::new("status_code", response.status().as_str()));
+        latency.tags.push(Tag::new("status_code", response.status().as_str()));
         latency.fields.push(Field::new("duration", duration));
 
         // Extract Status Code & reqwest::Response Bytes

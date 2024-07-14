@@ -2,7 +2,10 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use wednesday_model::{identifiers::{Exchange, Market}, instruments::Instrument};
+use wednesday_model::{
+    identifiers::{Exchange, Market},
+    instruments::Instrument,
+};
 
 use super::{decision::Decision, market_meta::MarketMeta};
 
@@ -10,11 +13,10 @@ use super::{decision::Decision, market_meta::MarketMeta};
 pub struct Signal {
     pub datetime: DateTime<Utc>,
     pub exchange: Exchange,
-    pub instrument: Instrument, 
+    pub instrument: Instrument,
     pub signals: HashMap<Decision, SignalStrength>,
-    pub market_meta: MarketMeta
+    pub market_meta: MarketMeta,
 }
-
 
 #[derive(Copy, Clone, PartialEq, PartialOrd, Debug, Deserialize, Serialize)]
 pub struct SignalStrength(pub f64);
@@ -23,7 +25,7 @@ pub struct SignalStrength(pub f64);
 pub struct SignalForceExit {
     pub datetime: DateTime<Utc>,
     pub exchange: Exchange,
-    pub instrument: Instrument
+    pub instrument: Instrument,
 }
 
 impl SignalForceExit {
@@ -32,19 +34,19 @@ impl SignalForceExit {
     pub fn new<E, I>(exchange: E, instrument: I) -> Self
     where
         E: Into<Exchange>,
-        I: Into<Instrument>
+        I: Into<Instrument>,
     {
         Self {
             datetime: Utc::now(),
             exchange: exchange.into(),
-            instrument: instrument.into()
+            instrument: instrument.into(),
         }
     }
 }
 
-impl<M> From<M> for SignalForceExit 
+impl<M> From<M> for SignalForceExit
 where
-    M: Into<Market>
+    M: Into<Market>,
 {
     fn from(market: M) -> Self {
         let market = market.into();

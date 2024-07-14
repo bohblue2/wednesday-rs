@@ -4,9 +4,24 @@ use parking_lot::Mutex;
 use serde::Serialize;
 use tokio::sync::mpsc;
 use uuid::Uuid;
-use wednesday_model::{events::{DataKind, MarketEvent}, identifiers::Market};
+use wednesday_model::{
+    events::{DataKind, MarketEvent},
+    identifiers::Market,
+};
 
-use crate::{data::FeedGenerator, execution::ExecutionClient, model::{engine_error::EngineError, event::{Event, MessageTransmitter}}, portfolio::{generator::OrderGenerator, updater::{FillUpdater, MarketUpdater}}, strategy::SignalGenerator};
+use crate::{
+    data::FeedGenerator,
+    execution::ExecutionClient,
+    model::{
+        engine_error::EngineError,
+        event::{Event, MessageTransmitter},
+    },
+    portfolio::{
+        generator::OrderGenerator,
+        updater::{FillUpdater, MarketUpdater},
+    },
+    strategy::SignalGenerator,
+};
 
 use super::{commond::EngineCommand, trader::Trader};
 
@@ -28,11 +43,10 @@ where
     data: Option<Data>,
     strategy: Option<Strategy>,
     execution: Option<Execution>,
-    _statistic_marker: Option<PhantomData<Statistic>>
+    _statistic_marker: Option<PhantomData<Statistic>>,
 }
 
-impl<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
-    TraderBuilder<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
+impl<EventTx, Statistic, Portfolio, Data, Strategy, Execution> TraderBuilder<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
 where
     EventTx: MessageTransmitter<Event>,
     Statistic: Serialize + Send,
@@ -91,10 +105,7 @@ where
     }
 
     pub fn data(self, value: Data) -> Self {
-        Self {
-            data: Some(value),
-            ..self
-        }
+        Self { data: Some(value), ..self }
     }
 
     pub fn strategy(self, value: Strategy) -> Self {
@@ -111,33 +122,17 @@ where
         }
     }
 
-    pub fn build(
-        self,
-    ) -> Result<Trader<EventTx, Statistic, Portfolio, Data, Strategy, Execution>, EngineError> {
+    pub fn build(self) -> Result<Trader<EventTx, Statistic, Portfolio, Data, Strategy, Execution>, EngineError> {
         Ok(Trader {
-            engine_id: self
-                .engine_id
-                .ok_or(EngineError::BuilderIncomplete("engine_id"))?,
-            market: self
-                .market
-                .ok_or(EngineError::BuilderIncomplete("market"))?,
-            command_rx: self
-                .command_rx
-                .ok_or(EngineError::BuilderIncomplete("command_rx"))?,
-            event_tx: self
-                .event_tx
-                .ok_or(EngineError::BuilderIncomplete("event_tx"))?,
+            engine_id: self.engine_id.ok_or(EngineError::BuilderIncomplete("engine_id"))?,
+            market: self.market.ok_or(EngineError::BuilderIncomplete("market"))?,
+            command_rx: self.command_rx.ok_or(EngineError::BuilderIncomplete("command_rx"))?,
+            event_tx: self.event_tx.ok_or(EngineError::BuilderIncomplete("event_tx"))?,
             event_q: VecDeque::with_capacity(2),
-            portfolio: self
-                .portfolio
-                .ok_or(EngineError::BuilderIncomplete("portfolio"))?,
+            portfolio: self.portfolio.ok_or(EngineError::BuilderIncomplete("portfolio"))?,
             data: self.data.ok_or(EngineError::BuilderIncomplete("data"))?,
-            strategy: self
-                .strategy
-                .ok_or(EngineError::BuilderIncomplete("strategy"))?,
-            execution: self
-                .execution
-                .ok_or(EngineError::BuilderIncomplete("execution"))?,
+            strategy: self.strategy.ok_or(EngineError::BuilderIncomplete("strategy"))?,
+            execution: self.execution.ok_or(EngineError::BuilderIncomplete("execution"))?,
             _statistic_marker: PhantomData::default(),
         })
     }

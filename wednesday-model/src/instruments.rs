@@ -1,4 +1,4 @@
-use std::fmt::{self, Display, Debug};
+use std::fmt::{self, Debug, Display};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Deserializer, Serialize};
@@ -26,8 +26,7 @@ impl Display for InstrumentKind {
             match self {
                 InstrumentKind::Stock => "stock".to_string(),
                 InstrumentKind::CryptoSpot => "spot".to_string(),
-                InstrumentKind::CryptoFuture(futures_contract) => 
-                    format!("future_{}-UTC", futures_contract.expiration.date_naive()),
+                InstrumentKind::CryptoFuture(futures_contract) => format!("future_{}-UTC", futures_contract.expiration.date_naive()),
                 InstrumentKind::CryptoPerpetual => "perpetual".to_string(),
             }
         )
@@ -39,7 +38,6 @@ pub struct FuturesContract {
     #[serde(with = "chrono::serde::ts_milliseconds")]
     pub expiration: DateTime<Utc>,
 }
-
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 pub struct Symbol(String);
@@ -72,7 +70,7 @@ impl<'de> Deserialize<'de> for Symbol {
 }
 
 impl<S> From<S> for Symbol
-where 
+where
     S: Into<String>,
 {
     fn from(input: S) -> Self {
@@ -105,13 +103,12 @@ impl Display for Instrument {
     }
 }
 
+#[allow(clippy::redundant_field_names)]
 impl<S> From<(S, S, InstrumentKind)> for Instrument
 where
     S: Into<Symbol>,
 {
-    fn from(
-        (base_currency, quote_curreny, kind): (S, S, InstrumentKind)
-    ) -> Self {
+    fn from((base_currency, quote_curreny, kind): (S, S, InstrumentKind)) -> Self {
         Instrument {
             base_currency: base_currency.into(),
             quote_currency: quote_curreny.into(),
@@ -144,15 +141,15 @@ mod tests {
     fn test_de_instrument() {
         struct TestCase {
             input: &'static str,
-            expected: Result<Instrument, serde_json::Error>
+            expected: Result<Instrument, serde_json::Error>,
         }
 
         let cases = vec![
             TestCase {
                 input: r#"{
-                    "base_currency": "btc", 
-                    "quote_currency": "usd", 
-                    "instrument_kind": "crypto_spot" 
+                    "base_currency": "btc",
+                    "quote_currency": "usd",
+                    "instrument_kind": "crypto_spot"
                 }"#,
                 expected: Ok(Instrument::from(("btc", "usd", InstrumentKind::CryptoSpot))),
             },
@@ -174,12 +171,12 @@ mod tests {
             TestCase {
                 // TC2: Valid FuturePerpetual
                 input: r#"{
-                    "base_currency": "btc", 
-                    "quote_currency": "usd", 
+                    "base_currency": "btc",
+                    "quote_currency": "usd",
                     "instrument_kind": "crypto_perpetual"
                 }"#,
                 expected: Ok(Instrument::from(("btc", "usd", InstrumentKind::CryptoPerpetual))),
-            }
+            },
         ];
 
         for (i, test_case) in cases.iter().enumerate() {
@@ -187,13 +184,13 @@ mod tests {
             match (&actual, &test_case.expected) {
                 (Ok(act_inst), Ok(exp_inst)) => {
                     assert_eq!(act_inst, exp_inst, "Test case {} failed", i);
-                }
+                },
                 (Err(act_err), Err(exp_err)) => {
                     assert_eq!(act_err.to_string(), exp_err.to_string(), "Test case {} failed", i);
-                }
+                },
                 _ => {
                     panic!("Test case {} failed: expected {:?}, got {:?}", i, test_case.expected, actual);
-                }
+                },
             }
         }
     }

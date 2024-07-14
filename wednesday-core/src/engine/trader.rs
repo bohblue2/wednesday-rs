@@ -5,9 +5,27 @@ use serde::Serialize;
 use tokio::{io::Empty, sync::mpsc};
 use tracing::{debug, info, warn};
 use uuid::Uuid;
-use wednesday_model::{events::{DataKind, MarketEvent}, identifiers::Market, order};
+use wednesday_model::{
+    events::{DataKind, MarketEvent},
+    identifiers::Market,
+    order,
+};
 
-use crate::{data::FeedGenerator, execution::ExecutionClient, model::{engine_error::EngineError, enums::Feed, event::{Event, MessageTransmitter}, signal::SignalForceExit}, portfolio::{generator::OrderGenerator, updater::{FillUpdater, MarketUpdater}}, strategy::SignalGenerator};
+use crate::{
+    data::FeedGenerator,
+    execution::ExecutionClient,
+    model::{
+        engine_error::EngineError,
+        enums::Feed,
+        event::{Event, MessageTransmitter},
+        signal::SignalForceExit,
+    },
+    portfolio::{
+        generator::OrderGenerator,
+        updater::{FillUpdater, MarketUpdater},
+    },
+    strategy::SignalGenerator,
+};
 
 use super::{commond::EngineCommand, trader_builder::TraderBuilder};
 
@@ -28,7 +46,7 @@ where
     pub data: Data,
     pub strategy: Strategy,
     pub execution: Execution,
-    _statistic_marker: PhantomData<Statistic>
+    _statistic_marker: PhantomData<Statistic>,
 }
 
 #[derive(Debug)]
@@ -44,7 +62,7 @@ where
     pub(crate) engine_id: Uuid,
     pub(crate) market: Market,
     pub(crate) command_rx: mpsc::Receiver<EngineCommand>,
-    // [`Event`] transmitter for sending every [`Event`] the [`Trader`] encounters to an external 
+    // [`Event`] transmitter for sending every [`Event`] the [`Trader`] encounters to an external
     // sink.
     pub(crate) event_tx: EventTx,
     // Queue for storing [`Event`]s used by the trading loop in the run() method.
@@ -53,11 +71,10 @@ where
     pub(crate) data: Data,
     pub(crate) strategy: Strategy,
     pub(crate) execution: Execution,
-    pub(crate) _statistic_marker: PhantomData<Statistic>
+    pub(crate) _statistic_marker: PhantomData<Statistic>,
 }
 
-impl<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
-    Trader<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
+impl<EventTx, Statistic, Portfolio, Data, Strategy, Execution> Trader<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
 where
     EventTx: MessageTransmitter<Event> + Send,
     Statistic: Serialize + Send,
@@ -66,9 +83,7 @@ where
     Strategy: SignalGenerator + Send,
     Execution: ExecutionClient + Send,
 {
-    pub fn new(
-        components: TraderComponents<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
-    ) -> Self {
+    pub fn new(components: TraderComponents<EventTx, Statistic, Portfolio, Data, Strategy, Execution>) -> Self {
         info!(
             engine_id = components.engine_id.to_string(),
             market = ?components.market,
@@ -105,13 +120,10 @@ where
             // Check for new remote commands before continuing to generate another MarketEvent
             while let Some(command) = self.receive_remote_command() {
                 match command {
-                    EngineCommand::Terminate(reasone) => { break 'trading }
-                    EngineCommand::ExitPosition(market) => {
-                        self.event_q
-                            .push_back(Event::SignalForceExit(SignalForceExit::from(market)))
-                    }
+                    EngineCommand::Terminate(reasone) => break 'trading,
+                    EngineCommand::ExitPosition(market) => self.event_q.push_back(Event::SignalForceExit(SignalForceExit::from(market))),
                     // otherwise => continue
-                    _ => continue
+                    _ => continue,
                 }
             }
 
@@ -122,7 +134,7 @@ where
                     // we need to figure out how to avoid this clone
                     self.event_tx.send(Event::Market(market.clone()));
                     self.event_q.push_back(Event::Market(market));
-                }
+                },
                 Feed::Unhealthy => {
                     warn!(
                         engine_id = %self.engine_id,
@@ -132,12 +144,12 @@ where
                     );
                     continue 'trading;
                 },
-                Feed::Finished => { break 'trading }, 
+                Feed::Finished => break 'trading,
             }
-            
+
             // Handle Events in the event_q
             // '--> While loop will break when event_q is empty and requires another MarketEvent
-            // NOTE: Maybe we need implement state transition machine to handle the events. 
+            // NOTE: Maybe we need implement state transition machine to handle the events.
             // because the current implementation is not clear. we do not know the order of the
             // events and how they are handled.
             while let Some(event) = self.event_q.pop_front() {
@@ -156,20 +168,15 @@ where
                         {
                             self.event_tx.send(Event::PositionUpdate(position_update));
                         }
-                    }
+                    },
                     Event::Signal(signal) => {
-                        if let Some(order) = self
-                            .portfolio
-                            .lock()
-                            .generate_order(&signal)
-                            .expect("failed to generate order")
-                        {
+                        if let Some(order) = self.portfolio.lock().generate_order(&signal).expect("failed to generate order") {
                             // NOTE: Clone() occurs here, we need to figure out how to avoid this
                             self.event_tx.send(Event::OrderNew(order.clone()));
                             // self.execution.send_order(order);
                             self.event_q.push_back(Event::OrderNew(order));
                         }
-                    }
+                    },
                     Event::SignalForceExit(signal_force_exit) => {
                         if let Some(order) = self
                             .portfolio
@@ -182,29 +189,25 @@ where
                             // self.execution.send_order(order);
                             self.event_q.push_back(Event::OrderNew(order));
                         }
-                    }
+                    },
                     Event::OrderNew(order) => {
-                        let fill = self
-                            .execution
-                            .generate_fill(&order)
-                            .expect("failed to generate fill");
-                        
+                        let fill = self.execution.generate_fill(&order).expect("failed to generate fill");
+
                         self.event_tx.send(Event::Fill(fill.clone()));
                         self.event_q.push_back(Event::Fill(fill));
-                    }
+                    },
                     Event::Fill(fill) => {
                         let fill_side_effect_events = self
                             .portfolio
                             .lock()
                             .update_from_fill(&fill)
                             .expect("failed to update Portfolio from fill");
-                        
+
                         self.event_tx.send_many(fill_side_effect_events);
-                    }
-                    _ => { debug!(
-                        log_meesage = "unhandled event", 
-                        _event = &*format!("{:?}", event))
-                    }                    
+                    },
+                    _ => {
+                        debug!(log_meesage = "unhandled event", _event = &*format!("{:?}", event))
+                    },
                 }
             }
 
@@ -227,18 +230,15 @@ where
                 Some(command)
             },
             Err(err) => match err {
-                mpsc::error::TryRecvError::Empty => None, 
+                mpsc::error::TryRecvError::Empty => None,
                 mpsc::error::TryRecvError::Disconnected => {
                     warn!(
                         action = "synthesising a Command::Terminate",
                         "remote Command transmitter has been dropped"
                     );
-                    Some(EngineCommand::Terminate(
-                        "remote command transmitter dropped".to_owned(),
-                    ))
-                }
-            }
+                    Some(EngineCommand::Terminate("remote command transmitter dropped".to_owned()))
+                },
+            },
         }
     }
 }
-

@@ -1,12 +1,12 @@
 use crate::{
-    model::position::Position, 
+    model::position::Position,
     statistic::{
         metric::{
             drawdown::{AvgDrawdown, Drawdown, MaxDrawdown},
             EquityPoint,
         },
         summary::{PositionSummariser, TableBuilder},
-    }
+    },
 };
 use prettytable::{row, Row};
 use serde::{Deserialize, Serialize};
@@ -36,12 +36,7 @@ impl PositionSummariser for DrawdownSummary {
 
 impl TableBuilder for DrawdownSummary {
     fn titles(&self) -> Row {
-        row![
-            "Max Drawdown",
-            "Max Drawdown Days",
-            "Avg. Drawdown",
-            "Avg. Drawdown Days",
-        ]
+        row!["Max Drawdown", "Max Drawdown Days", "Avg. Drawdown", "Avg. Drawdown Days",]
     }
 
     fn row(&self) -> Row {

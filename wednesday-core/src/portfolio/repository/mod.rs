@@ -3,18 +3,15 @@ pub mod in_memory;
 use uuid::Uuid;
 use wednesday_model::identifiers::{Market, MarketId};
 
-use crate::model::{balance::Balance, position::{Position, PositionId}, repository_error::RepositoryError};
-
+use crate::model::{
+    balance::Balance,
+    position::{Position, PositionId},
+    repository_error::RepositoryError,
+};
 
 pub trait PositionHandler {
-    fn set_open_position(
-        &mut self,
-        position: Position
-    ) -> Result<(), RepositoryError>;
-    fn get_open_position(
-        &mut self,
-        position_id: &PositionId
-    ) -> Result<Option<Position>, RepositoryError>; 
+    fn set_open_position(&mut self, position: Position) -> Result<(), RepositoryError>;
+    fn get_open_position(&mut self, position_id: &PositionId) -> Result<Option<Position>, RepositoryError>;
 
     // NOTE: engine_id 를 argument 로 받아야 하는지 고민해보자, repository 에서 engine_id 를 소유하도록 변경
     fn get_open_positions<'a, Markets: Iterator<Item = &'a Market>>(
@@ -23,21 +20,11 @@ pub trait PositionHandler {
         markets: Markets,
     ) -> Result<Vec<Position>, RepositoryError>;
 
-    fn remove_position(
-        &mut self,
-        position_id: &PositionId
-    ) -> Result<Option<Position>, RepositoryError>;   
+    fn remove_position(&mut self, position_id: &PositionId) -> Result<Option<Position>, RepositoryError>;
 
-    fn set_exited_position(
-        &mut self,
-        engine_id: Uuid,
-        position: Position
-    ) -> Result<(), RepositoryError>;
+    fn set_exited_position(&mut self, engine_id: Uuid, position: Position) -> Result<(), RepositoryError>;
 
-    fn get_exited_positions(
-        &mut self,
-        engine_id: Uuid
-    ) -> Result<Vec<Position>, RepositoryError>; 
+    fn get_exited_positions(&mut self, engine_id: Uuid) -> Result<Vec<Position>, RepositoryError>;
 }
 
 pub trait BalanceHandler {
@@ -46,11 +33,7 @@ pub trait BalanceHandler {
 }
 
 pub trait StatisticHandler<Statistic> {
-    fn set_statistics(
-        &mut self, 
-        market_id: MarketId,
-        statistic: Statistic
-    ) -> Result<(), RepositoryError>;
+    fn set_statistics(&mut self, market_id: MarketId, statistic: Statistic) -> Result<(), RepositoryError>;
     fn get_statistics(&mut self, market_id: &MarketId) -> Result<Statistic, RepositoryError>;
 }
 

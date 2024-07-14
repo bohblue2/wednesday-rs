@@ -1,10 +1,9 @@
 pub mod builder;
-pub mod protocol;
 pub mod exchange;
 pub mod market;
 pub mod parser;
+pub mod protocol;
 pub mod selector;
-
 
 use std::collections::HashMap;
 
@@ -16,14 +15,13 @@ use crate::subscriber::subscription::SubscriptionKind;
 
 use self::builder::{multiple::MultiStreamBuilder, StreamBuilder};
 
-
 #[derive(Debug)]
 pub struct Streams<T> {
     pub streams: HashMap<ExchangeId, mpsc::UnboundedReceiver<T>>,
 }
 
-impl <T> Streams<T> {
-    pub fn builder<Kind>() -> StreamBuilder<Kind> 
+impl<T> Streams<T> {
+    pub fn builder<Kind>() -> StreamBuilder<Kind>
     where
         Kind: SubscriptionKind,
     {
@@ -40,7 +38,7 @@ impl <T> Streams<T> {
     }
 
     pub async fn join(self) -> mpsc::UnboundedReceiver<T>
-    where 
+    where
         T: Send + 'static,
     {
         let (joined_tx, joined_rx) = mpsc::unbounded_channel();
@@ -57,12 +55,9 @@ impl <T> Streams<T> {
     }
 
     pub async fn join_map(self) -> StreamMap<ExchangeId, UnboundedReceiverStream<T>> {
-        self.streams
-            .into_iter()
-            .fold(StreamMap::new(), |mut map, (exchange, rx)| {
-                map.insert(exchange, UnboundedReceiverStream::new(rx));
-                map
-            })
+        self.streams.into_iter().fold(StreamMap::new(), |mut map, (exchange, rx)| {
+            map.insert(exchange, UnboundedReceiverStream::new(rx));
+            map
+        })
     }
-
 }

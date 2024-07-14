@@ -1,14 +1,12 @@
-use std::fmt::{self, Debug, Display};
+use std::fmt::Debug;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::{bar::Bar, error::DataError, identifiers::{Exchange, Market}, instruments::{Instrument, InstrumentKind}, orderbook::OrderBookL1, trade::PublicTrade};
+use crate::{bar::Bar, identifiers::Exchange, instruments::Instrument, orderbook::OrderBookL1, trade::PublicTrade};
 
 // use super::orderbook::{OrderBookL1};
 // use super::trade::Trade;
-
-
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct MarketEvent<T> {
@@ -37,7 +35,7 @@ impl From<MarketEvent<PublicTrade>> for MarketEvent<DataKind> {
             instrument: event.instrument,
             kind: DataKind::PublicTrade(event.kind),
         }
-    } 
+    }
 }
 
 impl From<MarketEvent<OrderBookL1>> for MarketEvent<DataKind> {

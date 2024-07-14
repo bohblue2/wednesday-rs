@@ -10,7 +10,6 @@ pub trait PositionEnterer {
     fn enter(engine_id: Uuid, fill: &FillEvent) -> Result<Position, PortfolioError>;
 }
 
-
 impl PositionEnterer for Position {
     fn enter(engine_id: Uuid, fill: &FillEvent) -> Result<Position, PortfolioError> {
         // Initialise Position Metadata
@@ -51,4 +50,3 @@ impl PositionEnterer for Position {
         })
     }
 }
-

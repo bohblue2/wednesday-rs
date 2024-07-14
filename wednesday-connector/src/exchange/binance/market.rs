@@ -8,7 +8,6 @@ use super::Binance;
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub struct BinanceMarket(pub String);
 
-
 impl<Server, Kind> Identifier<BinanceMarket> for Subscription<Binance<Server>, Kind> {
     fn id(&self) -> BinanceMarket {
         BinanceMarket(format!("{}{}", self.instrument.base_currency, self.instrument.quote_currency).to_uppercase())

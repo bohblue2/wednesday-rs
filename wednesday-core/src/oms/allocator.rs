@@ -6,12 +6,7 @@ use crate::model::{decision::Decision, order_event::OrderEvent, position::Positi
 pub trait OrderAllocator {
     /// Returns an [`OrderEvent`] with a calculated order quantity based on the input order,
     /// [`SignalStrength`] and potential existing [`Position`].
-    fn allocate_order(
-        &self,
-        order: &mut OrderEvent,
-        position: Option<&Position>,
-        signal_strength: SignalStrength,
-    );
+    fn allocate_order(&self, order: &mut OrderEvent, position: Option<&Position>, signal_strength: SignalStrength);
 }
 
 /// Default allocation manager that implements [`OrderAllocator`]. Order size is calculated by
@@ -22,12 +17,7 @@ pub struct DefaultAllocator {
 }
 
 impl OrderAllocator for DefaultAllocator {
-    fn allocate_order(
-        &self,
-        order: &mut OrderEvent,
-        position: Option<&Position>,
-        signal_strength: SignalStrength,
-    ) {
+    fn allocate_order(&self, order: &mut OrderEvent, position: Option<&Position>, signal_strength: SignalStrength) {
         // Calculate exact order_size, then round it to a more appropriate decimal place
         let default_order_size = self.default_order_value / order.market_meta.close;
         let default_order_size = (default_order_size * 10000.0).floor() / 10000.0;

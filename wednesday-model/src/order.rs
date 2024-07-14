@@ -31,9 +31,11 @@ impl Order {
             ts_init,
         }
     }
+}
 
-    pub fn default() -> Self {
-        Order {
+impl Default for Order {
+    fn default() -> Self {
+        Self {
             instrument_id: "".to_string(),
             side: OrderSide::None,
             order_type: OrderType::None,

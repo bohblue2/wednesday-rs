@@ -1,7 +1,9 @@
-
 use wednesday_model::identifiers::Identifier;
 
-use crate::subscriber::subscription::{kind::{OrderBooksL2, PublicTrades}, Subscription};
+use crate::subscriber::subscription::{
+    kind::{OrderBooksL2, PublicTrades},
+    Subscription,
+};
 
 use super::Binance;
 
@@ -30,8 +32,6 @@ impl<Server> Identifier<BinanceChannel> for Subscription<Binance<Server>, OrderB
 //         BinanceChannel::LIQUIDATIONS
 //     }
 // }
-
-
 
 impl AsRef<str> for BinanceChannel {
     fn as_ref(&self) -> &str {

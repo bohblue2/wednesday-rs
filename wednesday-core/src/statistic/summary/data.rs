@@ -23,22 +23,13 @@ impl DataSummary {
         self.mean = welford_online::calculate_mean(self.mean, next_value, self.count as f64);
 
         // Update Dispersion
-        self.dispersion
-            .update(prev_mean, self.mean, next_value, self.count);
+        self.dispersion.update(prev_mean, self.mean, next_value, self.count);
     }
 }
 
 impl TableBuilder for DataSummary {
     fn titles(&self) -> Row {
-        row![
-            "Count",
-            "Sum",
-            "Mean",
-            "Variance",
-            "Std. Dev",
-            "Range High",
-            "Range Low",
-        ]
+        row!["Count", "Sum", "Mean", "Variance", "Std. Dev", "Range High", "Range Low",]
     }
 
     fn row(&self) -> Row {
@@ -130,32 +121,17 @@ mod tests {
 
         for (index, test) in test_cases.into_iter().enumerate() {
             data_summary.update(test.input_next_value);
-            assert_eq!(
-                data_summary.count, test.expected_summary.count,
-                "Count Input: {:?}",
-                index
-            );
-            assert_eq!(
-                data_summary.sum, test.expected_summary.sum,
-                "Sum Input: {:?}",
-                index
-            );
-            assert_eq!(
-                data_summary.mean, test.expected_summary.mean,
-                "Mean Input: {:?}",
-                index
-            );
+            assert_eq!(data_summary.count, test.expected_summary.count, "Count Input: {:?}", index);
+            assert_eq!(data_summary.sum, test.expected_summary.sum, "Sum Input: {:?}", index);
+            assert_eq!(data_summary.mean, test.expected_summary.mean, "Mean Input: {:?}", index);
 
-            let recurrence_diff = data_summary.dispersion.recurrence_relation_m
-                - test.expected_summary.dispersion.recurrence_relation_m;
+            let recurrence_diff = data_summary.dispersion.recurrence_relation_m - test.expected_summary.dispersion.recurrence_relation_m;
             assert!(recurrence_diff < 1e-10, "Recurrence Input: {:?}", index);
 
-            let variance_diff =
-                data_summary.dispersion.variance - test.expected_summary.dispersion.variance;
+            let variance_diff = data_summary.dispersion.variance - test.expected_summary.dispersion.variance;
             assert!(variance_diff < 1e-10, "Variance Input: {:?}", index);
 
-            let std_dev_diff =
-                data_summary.dispersion.std_dev - test.expected_summary.dispersion.std_dev;
+            let std_dev_diff = data_summary.dispersion.std_dev - test.expected_summary.dispersion.std_dev;
             assert!(std_dev_diff < 1e-10, "Std. Dev. Input: {:?}", index);
         }
     }

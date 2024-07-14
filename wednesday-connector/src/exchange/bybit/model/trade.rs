@@ -1,11 +1,17 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use wednesday_model::{deserialization, enums::AggressorSide, events::{MarketEvent}, identifiers::{Exchange, ExchangeId}, instruments::Instrument, trade::PublicTrade};
-
+use wednesday_model::{
+    deserialization,
+    enums::AggressorSide,
+    events::MarketEvent,
+    identifiers::{Exchange, ExchangeId},
+    instruments::Instrument,
+    trade::PublicTrade,
+};
 
 use crate::transformer::iterator::MarketIter;
 
-use super::message::{BybitPayload};
+use super::message::BybitPayload;
 
 pub type BybitTrade = BybitPayload<Vec<BybitTradeInner>>;
 
@@ -43,10 +49,10 @@ pub struct BybitTradeInner {
 impl From<(ExchangeId, Instrument, BybitTrade)> for MarketIter<PublicTrade> {
     fn from((exchange_id, instrument, trades): (ExchangeId, Instrument, BybitTrade)) -> Self {
         Self(
-            trades.data
+            trades
+                .data
                 .into_iter()
-                .map(|trade| 
-                {
+                .map(|trade| {
                     Ok(MarketEvent {
                         exchange_ts: trade.exchange_ts,
                         local_ts: Utc::now(),
@@ -56,15 +62,14 @@ impl From<(ExchangeId, Instrument, BybitTrade)> for MarketIter<PublicTrade> {
                             id: trade.id,
                             price: trade.price,
                             quantity: trade.amount,
-                            aggressor_side: trade.side
-                        }
+                            aggressor_side: trade.side,
+                        },
                     })
-                }
-            ).collect()
+                })
+                .collect(),
         )
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -156,14 +161,14 @@ mod tests {
                 match (actual, test.expected) {
                     (Ok(actual), Ok(expected)) => {
                         assert_eq!(actual, expected, "TC{} failed", index)
-                    }
+                    },
                     (Err(_), Err(_)) => {
                         // Test passed
-                    }
+                    },
                     (actual, expected) => {
                         // Test failed
                         panic!("TC{index} failed because actual != expected. \nActual: {actual:?}\nExpected: {expected:?}\n");
-                    }
+                    },
                 }
             }
         }
@@ -210,14 +215,10 @@ mod tests {
                     expected: Ok(BybitTrade {
                         subscription_id: SubscriptionId("publicTrade|BTCUSDT".to_string()),
                         r#type: "snapshot".to_string(),
-                        exchange_ts: datetime_utc_from_epoch_duration(Duration::from_millis(
-                            1672304486868,
-                        )),
+                        exchange_ts: datetime_utc_from_epoch_duration(Duration::from_millis(1672304486868)),
                         data: vec![
                             BybitTradeInner {
-                                exchange_ts: datetime_utc_from_epoch_duration(Duration::from_millis(
-                                    1672304486865,
-                                )),
+                                exchange_ts: datetime_utc_from_epoch_duration(Duration::from_millis(1672304486865)),
                                 market: "BTCUSDT".to_string(),
                                 side: AggressorSide::Buy,
                                 amount: 0.001,
@@ -225,9 +226,7 @@ mod tests {
                                 id: "20f43950-d8dd-5b31-9112-a178eb6023af".to_string(),
                             },
                             BybitTradeInner {
-                                exchange_ts: datetime_utc_from_epoch_duration(Duration::from_millis(
-                                    1672304486865,
-                                )),
+                                exchange_ts: datetime_utc_from_epoch_duration(Duration::from_millis(1672304486865)),
                                 market: "BTCUSDT".to_string(),
                                 side: AggressorSide::Sell,
                                 amount: 0.001,
@@ -303,14 +302,14 @@ mod tests {
                 match (actual, test.expected) {
                     (Ok(actual), Ok(expected)) => {
                         assert_eq!(actual, expected, "TC{} failed", index)
-                    }
+                    },
                     (Err(_), Err(_)) => {
                         // Test passed
-                    }
+                    },
                     (actual, expected) => {
                         // Test failed
                         panic!("TC{index} failed because actual != expected. \nActual: {actual:?}\nExpected: {expected:?}\n");
-                    }
+                    },
                 }
             }
         }

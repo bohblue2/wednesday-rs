@@ -1,9 +1,11 @@
-use std::{borrow::Cow, fmt::{self, Display, Debug}};
+use std::{
+    borrow::Cow,
+    fmt::{self, Debug, Display},
+};
 
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::instruments::{Instrument, InstrumentKind, Symbol};
-
 
 pub trait Identifier<T> {
     fn id(&self) -> T;
@@ -62,7 +64,6 @@ where
     }
 }
 
-
 impl Debug for MarketId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "MarketId({})", self.0)
@@ -85,9 +86,10 @@ impl MarketId {
     pub fn new(exchange: &Exchange, instrument: &Instrument) -> Self {
         Self(
             format!(
-                "{}:{}/{}-{}", 
+                "{}:{}/{}-{}",
                 exchange, instrument.base_currency, instrument.quote_currency, instrument.kind
-            ).to_lowercase()
+            )
+            .to_lowercase(),
         )
     }
 }
@@ -115,7 +117,6 @@ impl Display for Exchange {
         write!(f, "{}", self.0)
     }
 }
-
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct SubscriptionId(pub String);
@@ -207,36 +208,16 @@ impl ExchangeId {
 
         match (self, instrument_kind) {
             // Spot
-            (
-                BinanceFuturesUsd | 
-                Bitmex | 
-                BybitPerpetualsUsd | 
-                GateioPerpetualsUsd| 
-                GateioPerpetualsBtc,
-                CryptoSpot,
-            ) => false,
+            (BinanceFuturesUsd | Bitmex | BybitPerpetualsUsd | GateioPerpetualsUsd | GateioPerpetualsBtc, CryptoSpot) => false,
             (_, CryptoSpot) => true,
 
             // Future
-            (
-                GateioFuturesUsd | 
-                GateioFuturesBtc | 
-                Okx, 
-                CryptoFuture(_)
-            ) => true,
+            (GateioFuturesUsd | GateioFuturesBtc | Okx, CryptoFuture(_)) => true,
             (_, CryptoFuture(_)) => false,
 
             // Future Perpetual Swaps
-            (
-                BinanceFuturesUsd | 
-                Bitmex | 
-                Okx | 
-                BybitPerpetualsUsd | 
-                GateioPerpetualsUsd| 
-                GateioPerpetualsBtc,
-                CryptoPerpetual,
-            ) => true,
-            
+            (BinanceFuturesUsd | Bitmex | Okx | BybitPerpetualsUsd | GateioPerpetualsUsd | GateioPerpetualsBtc, CryptoPerpetual) => true,
+
             // Unimplemented
             (_, CryptoPerpetual) => false,
             (BinanceFuturesUsd, Stock) => todo!(),
@@ -256,8 +237,7 @@ impl ExchangeId {
             (Okx, Stock) => todo!(),
         }
     }
-}    
-
+}
 
 #[cfg(test)]
 mod tests {
@@ -269,11 +249,7 @@ mod tests {
     #[test]
     fn test_market_from_tuple() {
         let exchange = Exchange::from("NASDAQ");
-        let instrument = Instrument::from((
-            Symbol::from("AAPL"), 
-            Symbol::from("USD"),
-            InstrumentKind::Stock
-        ));
+        let instrument = Instrument::from((Symbol::from("AAPL"), Symbol::from("USD"), InstrumentKind::Stock));
         let market: Market = (exchange.clone(), instrument.clone()).into();
         assert_eq!(market.exchange, exchange);
         assert_eq!(market.instrument, instrument);
@@ -295,16 +271,11 @@ mod tests {
     #[test]
     fn test_market_id_from_market() {
         let exchange = Exchange::from("NYSE");
-        let instrument = Instrument::from((
-            Symbol::new("AAPL"), 
-            Symbol::new("USD"),
-            InstrumentKind::Stock
-        ));
+        let instrument = Instrument::from((Symbol::new("AAPL"), Symbol::new("USD"), InstrumentKind::Stock));
         let market = Market::new(exchange.clone(), instrument.clone());
         let market_id: MarketId = MarketId::from(&market);
         assert_eq!(market_id, MarketId::new(&exchange, &instrument));
     }
-
 
     #[test]
     fn test_de_market() {
@@ -343,14 +314,14 @@ mod tests {
             match (actual, test.expected) {
                 (Ok(actual), Ok(expected)) => {
                     assert_eq!(actual, expected, "TC{} failed", index)
-                }
+                },
                 (Err(_), Err(_)) => {
                     // Test passed
-                }
+                },
                 (actual, expected) => {
                     // Test failed
                     panic!("TC{index} failed because actual != expected. \nActual: {actual:?}\nExpected: {expected:?}\n");
-                }
+                },
             }
         }
     }

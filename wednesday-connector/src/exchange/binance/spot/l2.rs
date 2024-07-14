@@ -1,19 +1,25 @@
 use async_trait::async_trait;
-use chrono::Utc;
+
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
-use wednesday_model::{error::{DataError, SocketError}, identifiers::{Identifier, SubscriptionId}, instruments::Instrument, orderbook::OrderBook};
+use wednesday_model::{
+    error::{DataError, SocketError},
+    identifiers::{Identifier, SubscriptionId},
+    instruments::Instrument,
+    orderbook::OrderBook,
+};
 
-use crate::{exchange::binance::book::{BinanceLevel, BinanceOrderBookL2Snapshot}, protocol::http::websocket::WsMessage, transformer::updater::{InstrumentOrderBook, OrderBookUpdater}};
+use crate::{
+    exchange::binance::book::{BinanceLevel, BinanceOrderBookL2Snapshot},
+    protocol::http::websocket::WsMessage,
+    transformer::updater::{InstrumentOrderBook, OrderBookUpdater},
+};
 
 pub const REST_BOOK_L2_SNAPSHOT_URL_BINANCE_SPOT: &str = "https://api.binance.com/api/v3/depth";
 
 #[derive(Debug, Clone, PartialEq, PartialOrd, Deserialize, Serialize)]
 pub struct BinanceSpotOrderBookL2Delta {
-    #[serde(
-        alias = "s",
-        deserialize_with = "crate::exchange::binance::book::de_ob_l2_subscription_id"
-    )]
+    #[serde(alias = "s", deserialize_with = "crate::exchange::binance::book::de_ob_l2_subscription_id")]
     pub subscription_id: SubscriptionId,
     #[serde(alias = "U")]
     pub first_update_id: u64,
@@ -81,14 +87,9 @@ impl BinanceSpotBookUpdater {
     /// "The first processed event should have U <= lastUpdateId+1 AND u >= lastUpdateId+1"
     ///
     /// See docs: <https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly>
-    pub fn validate_first_update(
-        &self, 
-        update: &BinanceSpotOrderBookL2Delta,
-    ) -> Result<(), DataError> {
+    pub fn validate_first_update(&self, update: &BinanceSpotOrderBookL2Delta) -> Result<(), DataError> {
         let expected_next_id = self.last_update_id + 1;
-        if update.first_update_id <= expected_next_id 
-            && update.last_update_id >= expected_next_id 
-        {
+        if update.first_update_id <= expected_next_id && update.last_update_id >= expected_next_id {
             Ok(())
         } else {
             Err(DataError::InvalidSequence {
@@ -96,7 +97,6 @@ impl BinanceSpotBookUpdater {
                 first_update_id: update.first_update_id,
             })
         }
-
     }
 
     /// BinanceFuturesUsd: How To Manage A Local OrderBook Correctly: Step 6:
@@ -104,10 +104,7 @@ impl BinanceSpotBookUpdater {
     ///  previous event's u+1, otherwise initialize the process from step 3."
     ///
     /// See docs: <https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly>
-    pub fn validate_next_update(
-        &self,
-        update: &BinanceSpotOrderBookL2Delta,
-    ) -> Result<(), DataError> {
+    pub fn validate_next_update(&self, update: &BinanceSpotOrderBookL2Delta) -> Result<(), DataError> {
         let expected_next_id = self.last_update_id + 1;
         if update.first_update_id == expected_next_id {
             Ok(())
@@ -125,11 +122,7 @@ impl OrderBookUpdater for BinanceSpotBookUpdater {
     type OrderBook = OrderBook;
     type Update = BinanceSpotOrderBookL2Delta;
 
-
-    async fn init<Exchange, Kind>(
-        _: UnboundedSender<WsMessage>,
-        instrument: Instrument
-    ) -> Result<InstrumentOrderBook<Self>, DataError>
+    async fn init<Exchange, Kind>(_: UnboundedSender<WsMessage>, instrument: Instrument) -> Result<InstrumentOrderBook<Self>, DataError>
     where
         Exchange: Send,
         Kind: Send,
@@ -151,15 +144,11 @@ impl OrderBookUpdater for BinanceSpotBookUpdater {
         Ok(InstrumentOrderBook {
             instrument,
             updater: Self::new(snapshot.last_update_id),
-            book: OrderBook::from(snapshot)
+            book: OrderBook::from(snapshot),
         })
     }
 
-    fn update(
-        &mut self,
-        book: &mut Self::OrderBook,
-        update: Self::Update,
-    ) -> Result<Option<Self::OrderBook>, DataError> {
+    fn update(&mut self, book: &mut Self::OrderBook, update: Self::Update) -> Result<Option<Self::OrderBook>, DataError> {
         // BinanceSpot: How To Manage A Local OrderBook Correctly
         // See Self's Rust Docs for more information on each numbered step
         // See docs: <https://binance-docs.github.io/apidocs/spot/en/#how-to-manage-a-local-order-book-correctly>
@@ -178,7 +167,7 @@ impl OrderBookUpdater for BinanceSpotBookUpdater {
         book.last_update_ts = chrono::Utc::now();
         book.bids.upsert(update.bids);
         book.asks.upsert(update.asks);
-        
+
         self.updates_processed += 1;
         self.prev_update_id = self.last_update_id;
         self.last_update_id = update.last_update_id;
@@ -186,5 +175,4 @@ impl OrderBookUpdater for BinanceSpotBookUpdater {
         // NOTE:: 여기서 snapshot을 넘겨주는게 맞나 ? 그냥 Book 넘겨주는게 맞을지도.
         Ok(Some(book.snapshot()))
     }
-
 }

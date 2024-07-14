@@ -42,4 +42,4 @@ async fn main() {
         info!(%exchange, ?ob, "Received orderbook");
     }
 
-} 
+}

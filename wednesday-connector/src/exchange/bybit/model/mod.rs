@@ -1,3 +1,3 @@
+pub mod l2;
 pub mod message;
 pub mod trade;
-pub mod l2;

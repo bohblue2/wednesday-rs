@@ -66,25 +66,18 @@ impl<Output> MultiStreamBuilder<Output> {
 
         // Init Streams<Kind::Event> & send mapped Outputs to the associated exchange_tx
         self.futures.push(Box::pin(async move {
-            builder
-                .init()
-                .await?
-                .streams
-                .into_iter()
-                .for_each(|(exchange, mut exchange_rx)| {
-                    // Remove exchange_tx<Output> from HashMap that's associated with this tuple:
-                    // (ExchangeId, exchange_rx<MarketEvent<SubKind::Event>>)
-                    let exchange_tx = exchange_txs
-                        .remove(&exchange)
-                        .expect("all exchange_txs should be present here");
+            builder.init().await?.streams.into_iter().for_each(|(exchange, mut exchange_rx)| {
+                // Remove exchange_tx<Output> from HashMap that's associated with this tuple:
+                // (ExchangeId, exchange_rx<MarketEvent<SubKind::Event>>)
+                let exchange_tx = exchange_txs.remove(&exchange).expect("all exchange_txs should be present here");
 
-                    // Task to receive MarketEvent<SubKind::Event> and send Outputs via exchange_tx
-                    tokio::spawn(async move {
-                        while let Some(event) = exchange_rx.recv().await {
-                            let _ = exchange_tx.send(Output::from(event));
-                        }
-                    });
+                // Task to receive MarketEvent<SubKind::Event> and send Outputs via exchange_tx
+                tokio::spawn(async move {
+                    while let Some(event) = exchange_rx.recv().await {
+                        let _ = exchange_tx.send(Output::from(event));
+                    }
                 });
+            });
 
             Ok(())
         }));

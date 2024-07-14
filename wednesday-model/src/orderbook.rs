@@ -3,16 +3,16 @@ use std::cmp::Ordering;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use tracing::debug;
-use wednesday_macro::{DeSubscriptionKind, SerSubscriptionKind};
 
-use crate::{calculator::{mid_price, volume_weighted_mid_price}, enums::BookSide, events::{MarketEvent}, identifiers::{Exchange, ExchangeId}, instruments::Instrument};
-
-
+use crate::{
+    calculator::{mid_price, volume_weighted_mid_price},
+    enums::BookSide,
+};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct OrderBookL1 {
     pub last_update_ts: DateTime<Utc>,
-    pub best_bid: Level, 
+    pub best_bid: Level,
     pub best_ask: Level,
 }
 
@@ -46,7 +46,7 @@ impl Level {
     pub fn eq_price(&self, price: f64) -> bool {
         (price - self.price).abs() < f64::EPSILON
     }
-    
+
     pub fn eq_amount(&self, amount: f64) -> bool {
         (amount - self.amount).abs() < f64::EPSILON
     }
@@ -70,17 +70,12 @@ impl Ord for Level {
 
 impl PartialOrd for Level {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self.price.partial_cmp(&other.price)? {
-            Ordering::Equal => self.amount.partial_cmp(&other.amount),
-            ordering => Some(ordering),
-        }
+        Some(self.cmp(other))
     }
 }
 
-// No need to implement this, since `PartialEq` is already implemented 
+// No need to implement this, since `PartialEq` is already implemented
 impl Eq for Level {}
-
-
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct OrderBook {
@@ -107,9 +102,7 @@ impl OrderBook {
 
     pub fn volume_weighed_mid_price(&self) -> Option<f64> {
         match (self.bids.levels.first(), self.asks.levels.first()) {
-            (Some(best_bid), Some(best_ask)) => {
-                Some(volume_weighted_mid_price(*best_bid, *best_ask))
-            }
+            (Some(best_bid), Some(best_ask)) => Some(volume_weighted_mid_price(*best_bid, *best_ask)),
             (Some(best_bid), None) => Some(best_bid.price),
             (None, Some(best_ask)) => Some(best_ask.price),
             (None, None) => None,
@@ -130,7 +123,7 @@ impl Default for OrderBook {
 #[derive(Debug, PartialEq, Clone, PartialOrd, Ord, Eq, Serialize, Deserialize)]
 pub struct OrderBookSide {
     side: BookSide,
-    pub levels: Vec<Level>
+    pub levels: Vec<Level>,
 }
 
 impl OrderBookSide {
@@ -141,7 +134,7 @@ impl OrderBookSide {
     {
         Self {
             side,
-            levels: levels.into_iter().map(L::into).collect()
+            levels: levels.into_iter().map(L::into).collect(),
         }
     }
 
@@ -150,9 +143,7 @@ impl OrderBookSide {
         Iter: IntoIterator<Item = L>,
         L: Into<Level>,
     {
-        levels
-            .into_iter()
-            .for_each(|level| self.upsert_single(level))
+        levels.into_iter().for_each(|level| self.upsert_single(level))
     }
 
     pub fn upsert_single<L>(&mut self, new_level: L)
@@ -160,7 +151,7 @@ impl OrderBookSide {
         L: Into<Level>,
     {
         let new_level = new_level.into();
-        
+
         match self
             .levels
             .iter_mut()
@@ -169,23 +160,23 @@ impl OrderBookSide {
         {
             Some((index, _)) if new_level.amount == 0.0 => {
                 self.levels.remove(index);
-            }
+            },
 
             Some((_, level)) => {
                 *level = new_level;
-            }
+            },
 
             None if new_level.amount > 0.0 => self.levels.push(new_level),
 
             _ => {
-                // {"message":"Level to remove not found","new_level":"Level { price: 61067.39, amount: 0.0 } 
+                // {"message":"Level to remove not found","new_level":"Level { price: 61067.39, amount: 0.0 }
                 // 만약 수정하려고 하는 가격 범위가 현재 미드 프라이스 기준으로 너무 멀리 100틱 이상 떨어져 있으면 무시.
                 debug!(
                     ?new_level,
                     side = %self.side,
                     "Level to remove not found",
                 );
-            }
+            },
         };
     }
 
@@ -197,9 +188,6 @@ impl OrderBookSide {
         }
     }
 }
-
-
-
 
 #[cfg(test)]
 mod tests {
@@ -288,18 +276,13 @@ mod tests {
             ];
 
             for (index, test) in tests.into_iter().enumerate() {
-                assert_eq!(
-                    test.input.volume_weighed_mid_price(),
-                    test.expected,
-                    "TC{index} failed"
-                )
+                assert_eq!(test.input.volume_weighed_mid_price(), test.expected, "TC{index} failed")
             }
         }
     }
 
     mod order_book {
         use super::*;
-        use crate::calculator::mid_price;
 
         #[test]
         fn test_mid_price() {
@@ -462,11 +445,7 @@ mod tests {
             ];
 
             for (index, test) in tests.into_iter().enumerate() {
-                assert_eq!(
-                    test.input.volume_weighed_mid_price(),
-                    test.expected,
-                    "TC{index} failed"
-                )
+                assert_eq!(test.input.volume_weighed_mid_price(), test.expected, "TC{index} failed")
             }
         }
     }
@@ -485,56 +464,30 @@ mod tests {
             let tests = vec![
                 TestCase {
                     // TC0: Level exists & new value is 0 => remove Level
-                    book_side: OrderBookSide::new(
-                        BookSide::Bid,
-                        vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 1)],
-                    ),
+                    book_side: OrderBookSide::new(BookSide::Bid, vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 1)]),
                     new_level: Level::new(100, 0),
-                    expected: OrderBookSide::new(
-                        BookSide::Bid,
-                        vec![Level::new(80, 1), Level::new(90, 1)],
-                    ),
+                    expected: OrderBookSide::new(BookSide::Bid, vec![Level::new(80, 1), Level::new(90, 1)]),
                 },
                 TestCase {
                     // TC1: Level exists & new value is > 0 => replace Level
-                    book_side: OrderBookSide::new(
-                        BookSide::Bid,
-                        vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 1)],
-                    ),
+                    book_side: OrderBookSide::new(BookSide::Bid, vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 1)]),
                     new_level: Level::new(100, 10),
-                    expected: OrderBookSide::new(
-                        BookSide::Bid,
-                        vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 10)],
-                    ),
+                    expected: OrderBookSide::new(BookSide::Bid, vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 10)]),
                 },
                 TestCase {
                     // TC2: Level does not exist & new value > 0 => insert new Level
-                    book_side: OrderBookSide::new(
-                        BookSide::Bid,
-                        vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 1)],
-                    ),
+                    book_side: OrderBookSide::new(BookSide::Bid, vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 1)]),
                     new_level: Level::new(110, 1),
                     expected: OrderBookSide::new(
                         BookSide::Bid,
-                        vec![
-                            Level::new(80, 1),
-                            Level::new(90, 1),
-                            Level::new(100, 1),
-                            Level::new(110, 1),
-                        ],
+                        vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 1), Level::new(110, 1)],
                     ),
                 },
                 TestCase {
                     // TC3: Level does not exist & new value is 0 => no change
-                    book_side: OrderBookSide::new(
-                        BookSide::Bid,
-                        vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 1)],
-                    ),
+                    book_side: OrderBookSide::new(BookSide::Bid, vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 1)]),
                     new_level: Level::new(110, 0),
-                    expected: OrderBookSide::new(
-                        BookSide::Bid,
-                        vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 1)],
-                    ),
+                    expected: OrderBookSide::new(BookSide::Bid, vec![Level::new(80, 1), Level::new(90, 1), Level::new(100, 1)]),
                 },
             ];
 
@@ -788,14 +741,14 @@ mod tests {
                 match (actual, test.expected) {
                     (None, None) => {
                         // Test passed
-                    }
+                    },
                     (Some(actual), Some(expected)) => {
                         assert_eq!(actual, expected, "TC{} failed", index)
-                    }
+                    },
                     (actual, expected) => {
                         // Test failed
                         panic!("TC{index} failed because actual != expected. \nActual: {actual:?}\nExpected: {expected:?}\n");
-                    }
+                    },
                 }
             }
         }

@@ -3,17 +3,23 @@ use std::marker::PhantomData;
 use uuid::Uuid;
 use wednesday_model::identifiers::Market;
 
-use crate::{model::portfolio_error::PortfolioError, oms::{allocator::OrderAllocator, evaluator::OrderEvaluator}, statistic::summary::{Initialiser, PositionSummariser}};
+use crate::{
+    model::portfolio_error::PortfolioError,
+    oms::{allocator::OrderAllocator, evaluator::OrderEvaluator},
+    statistic::summary::{Initialiser, PositionSummariser},
+};
 
-use super::{repository::{BalanceHandler, PositionHandler, StatisticHandler}, MetaPortfolio};
-
+use super::{
+    repository::{BalanceHandler, PositionHandler, StatisticHandler},
+    MetaPortfolio,
+};
 
 pub struct MetaPortfolioBuilder<Repository, Allocator, RiskManager, Statistic>
 where
     Repository: PositionHandler + BalanceHandler + StatisticHandler<Statistic>,
     Allocator: OrderAllocator,
     RiskManager: OrderEvaluator,
-    Statistic: Initialiser + PositionSummariser
+    Statistic: Initialiser + PositionSummariser,
 {
     engine_id: Option<Uuid>,
     markets: Option<Vec<Market>>,
@@ -25,9 +31,7 @@ where
     _statistic_marker: Option<PhantomData<Statistic>>,
 }
 
-
-impl<Repository, Allocator, RiskManager, Statistic>
-    MetaPortfolioBuilder<Repository, Allocator, RiskManager, Statistic>
+impl<Repository, Allocator, RiskManager, Statistic> MetaPortfolioBuilder<Repository, Allocator, RiskManager, Statistic>
 where
     Repository: PositionHandler + BalanceHandler + StatisticHandler<Statistic>,
     Allocator: OrderAllocator,
@@ -96,35 +100,23 @@ where
         }
     }
 
-    pub fn build_and_init(
-        self,
-    ) -> Result<MetaPortfolio<Repository, Allocator, RiskManager, Statistic>, PortfolioError> {
+    pub fn build_and_init(self) -> Result<MetaPortfolio<Repository, Allocator, RiskManager, Statistic>, PortfolioError> {
         // Construct Portfolio
         let mut portfolio = MetaPortfolio {
-            engine_id: self
-                .engine_id
-                .ok_or(PortfolioError::BuilderIncomplete("engine_id"))?,
-            repository: self
-                .repository
-                .ok_or(PortfolioError::BuilderIncomplete("repository"))?,
+            engine_id: self.engine_id.ok_or(PortfolioError::BuilderIncomplete("engine_id"))?,
+            repository: self.repository.ok_or(PortfolioError::BuilderIncomplete("repository"))?,
             allocation_manager: self
                 .allocation_manager
                 .ok_or(PortfolioError::BuilderIncomplete("allocation_manager"))?,
-            risk_manager: self
-                .risk_manager
-                .ok_or(PortfolioError::BuilderIncomplete("risk_manager"))?,
+            risk_manager: self.risk_manager.ok_or(PortfolioError::BuilderIncomplete("risk_manager"))?,
             _statistic_marker: PhantomData::default(),
         };
 
         // Persist initial state in the Repository
         portfolio.bootstrap_repository(
-            self.starting_cash
-                .ok_or(PortfolioError::BuilderIncomplete("starting_cash"))?,
-            &self
-                .markets
-                .ok_or(PortfolioError::BuilderIncomplete("markets"))?,
-            self.statistic_config
-                .ok_or(PortfolioError::BuilderIncomplete("statistic_config"))?,
+            self.starting_cash.ok_or(PortfolioError::BuilderIncomplete("starting_cash"))?,
+            &self.markets.ok_or(PortfolioError::BuilderIncomplete("markets"))?,
+            self.statistic_config.ok_or(PortfolioError::BuilderIncomplete("statistic_config"))?,
         )?;
 
         Ok(portfolio)

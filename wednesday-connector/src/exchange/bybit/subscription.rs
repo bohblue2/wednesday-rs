@@ -1,11 +1,8 @@
-use std::fmt::Display;
-
 use serde::{Deserialize, Serialize};
 use tracing::debug;
 use wednesday_model::error::SocketError;
 
 use crate::subscriber::validator::Validator;
-
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Deserialize, Serialize)]
 pub struct BybitSubscriptionResponse {
@@ -17,9 +14,8 @@ pub struct BybitSubscriptionResponse {
     #[serde(default)]
     pub req_id: String,
     #[serde(default)]
-    pub op: String
+    pub op: String,
 }
-
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Deserialize, Serialize)]
 pub enum BybitReturnMessage {
@@ -40,40 +36,30 @@ impl Default for BybitReturnMessage {
 impl Validator for BybitSubscriptionResponse {
     fn validate(self) -> Result<Self, SocketError>
     where
-        Self: Sized
+        Self: Sized,
     {
         println!("reg msg: {:?}", self.ret_msg);
         match self.ret_msg {
             BybitReturnMessage::Pong => Ok(self),
             BybitReturnMessage::Empty => {
-                debug!(
-                    "Received a response from the exchange: {:?}",
-                    self
-                );
+                debug!("Received a response from the exchange: {:?}", self);
                 if self.op == "subscribe" && self.success {
                     Ok(self)
                 } else {
-                    Err(SocketError::Subscribe(
-                        "received failure subsciption response".to_owned(),
-                    )) 
+                    Err(SocketError::Subscribe("received failure subsciption response".to_owned()))
                 }
             },
             BybitReturnMessage::Subscribe => {
                 if self.success {
                     Ok(self)
                 } else {
-                    Err(SocketError::Subscribe(
-                        "received failure subsciption response".to_owned(),
-                    )) 
+                    Err(SocketError::Subscribe("received failure subsciption response".to_owned()))
                 }
             },
-            _ => Err(SocketError::Subscribe(
-                "received unknown subsciption response".to_owned(),
-            )),
+            _ => Err(SocketError::Subscribe("received unknown subsciption response".to_owned())),
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -133,14 +119,14 @@ mod tests {
                 match (actual, test.expected) {
                     (Ok(actual), Ok(expected)) => {
                         assert_eq!(actual, expected, "TC{} failed", index)
-                    }
+                    },
                     (Err(_), Err(_)) => {
                         // Test passed
-                    }
+                    },
                     (actual, expected) => {
                         // Test failed
                         panic!("TC{index} failed because actual != expected. \nActual: {actual:?}\nExpected: {expected:?}\n");
-                    }
+                    },
                 }
             }
         }

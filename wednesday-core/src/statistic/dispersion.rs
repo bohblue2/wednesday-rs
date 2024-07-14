@@ -18,16 +18,11 @@ impl Dispersion {
         self.range.update(new_value);
 
         // Update Welford Online recurrence relation M
-        self.recurrence_relation_m = welford_online::calculate_recurrence_relation_m(
-            self.recurrence_relation_m,
-            prev_mean,
-            new_value,
-            new_mean,
-        );
+        self.recurrence_relation_m =
+            welford_online::calculate_recurrence_relation_m(self.recurrence_relation_m, prev_mean, new_value, new_mean);
 
         // Update Population Variance
-        self.variance =
-            welford_online::calculate_population_variance(self.recurrence_relation_m, value_count);
+        self.variance = welford_online::calculate_population_variance(self.recurrence_relation_m, value_count);
 
         // Update Standard Deviation
         self.std_dev = self.variance.sqrt();
@@ -64,12 +59,12 @@ impl Range {
                 if new_value < self.low {
                     self.low = new_value;
                 }
-            }
+            },
             false => {
                 self.activated = true;
                 self.high = new_value;
                 self.low = new_value;
-            }
+            },
         }
     }
 
@@ -191,12 +186,7 @@ mod tests {
         let outputs = vec![output_1, output_2, output_3, output_4, output_5];
 
         for (input, out) in inputs.into_iter().zip(outputs.into_iter()) {
-            dispersion.update(
-                input.prev_mean,
-                input.new_mean,
-                input.new_value,
-                input.value_count,
-            );
+            dispersion.update(input.prev_mean, input.new_mean, input.new_value, input.value_count);
 
             // Range
             assert_eq!(dispersion.range.activated, out.range.activated);

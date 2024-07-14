@@ -1,7 +1,11 @@
 use chrono::Utc;
-use wednesday_model::{error::DataError, events::{DataKind, MarketEvent}, identifiers::{Exchange, ExchangeId}, instruments::Instrument, orderbook::{OrderBook, OrderBookL1}, trade::PublicTrade};
-
-
+use wednesday_model::{
+    error::DataError,
+    events::MarketEvent,
+    identifiers::{Exchange, ExchangeId},
+    instruments::Instrument,
+    orderbook::OrderBook,
+};
 
 #[derive(Debug)]
 pub struct MarketIter<T>(pub Vec<Result<MarketEvent<T>, DataError>>);
@@ -14,7 +18,6 @@ impl<T> FromIterator<Result<MarketEvent<T>, DataError>> for MarketIter<T> {
         Self(iter.into_iter().collect())
     }
 }
-
 
 impl From<(ExchangeId, Instrument, OrderBook)> for MarketIter<OrderBook> {
     fn from((exchange_id, instrument, order_book): (ExchangeId, Instrument, OrderBook)) -> Self {

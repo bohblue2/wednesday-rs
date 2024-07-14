@@ -4,9 +4,17 @@ use serde::{Deserialize, Serialize};
 use tracing::{debug, info};
 use wednesday_model::{error::SocketError, identifiers::Identifier, instruments::Instrument};
 
-use crate::{exchange::connector::Connector, protocol::http::websocket::{connect, WsClient}, subscriber::{mapper::WsSubscriptionMapper, subscription::{Map, Subscription, SubscriptionKind, SubscriptionMeta}, Subscriber}};
-use crate::subscriber::validator::SubscriptionValidator;
 use crate::subscriber::mapper::SubscriptionMapper;
+use crate::subscriber::validator::SubscriptionValidator;
+use crate::{
+    exchange::connector::Connector,
+    protocol::http::websocket::{connect, WsClient},
+    subscriber::{
+        mapper::WsSubscriptionMapper,
+        subscription::{Map, Subscription, SubscriptionKind, SubscriptionMeta},
+        Subscriber,
+    },
+};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Deserialize, Serialize)]
 pub struct WsSubscriber;
@@ -14,10 +22,8 @@ pub struct WsSubscriber;
 #[async_trait]
 impl Subscriber for WsSubscriber {
     type SubscriptionMapper = WsSubscriptionMapper;
-    
-    async fn subscribe<Exchange, Kind>(
-        subscriptions: &[Subscription<Exchange, Kind>],
-    ) -> Result<(WsClient, Map<Instrument>), SocketError>
+
+    async fn subscribe<Exchange, Kind>(subscriptions: &[Subscription<Exchange, Kind>]) -> Result<(WsClient, Map<Instrument>), SocketError>
     where
         Exchange: Connector + Send + Sync,
         Kind: SubscriptionKind + Send + Sync,
@@ -41,12 +47,9 @@ impl Subscriber for WsSubscriber {
         }
         debug!(%exchange, "sent subscriptions to WebSocket");
         debug!(%exchange, "validating subscriptions");
-        let map =
-            Exchange::SubscriptionValidator::validate::<Exchange, Kind>(instrument_map, &mut websocket)
-            .await?;
-        
+        let map = Exchange::SubscriptionValidator::validate::<Exchange, Kind>(instrument_map, &mut websocket).await?;
+
         info!(%exchange, "subscribed to WebSocket");
         Ok((websocket, map))
     }
 }
-

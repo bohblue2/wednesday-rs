@@ -3,7 +3,14 @@ use std::collections::HashMap;
 use uuid::Uuid;
 use wednesday_model::identifiers::{Market, MarketId};
 
-use crate::{model::{balance::{Balance, BalanceId}, position::{determine_position_id, Position, PositionId}, repository_error::RepositoryError}, statistic::summary::PositionSummariser};
+use crate::{
+    model::{
+        balance::{Balance, BalanceId},
+        position::{determine_position_id, Position, PositionId},
+        repository_error::RepositoryError,
+    },
+    statistic::summary::PositionSummariser,
+};
 
 use super::{determine_exited_positions_id, BalanceHandler, PositionHandler, StatisticHandler};
 
@@ -15,21 +22,15 @@ pub struct InMemoryRepository<Statistic: PositionSummariser> {
 }
 
 impl<Statistic: PositionSummariser> PositionHandler for InMemoryRepository<Statistic> {
-    fn set_open_position(
-        &mut self,
-        position: Position
-    ) -> Result<(), RepositoryError> {
+    fn set_open_position(&mut self, position: Position) -> Result<(), RepositoryError> {
         self.open_positions.insert(position.position_id.clone(), position);
         Ok(())
     }
-    
-    fn get_open_position(
-        &mut self,
-        position_id: &PositionId
-    ) -> Result<Option<Position>, RepositoryError> {
+
+    fn get_open_position(&mut self, position_id: &PositionId) -> Result<Option<Position>, RepositoryError> {
         Ok(self.open_positions.get(position_id).cloned())
     }
-    
+
     fn get_open_positions<'a, Markets: Iterator<Item = &'a Market>>(
         &mut self,
         engine_id: Uuid,
@@ -38,35 +39,23 @@ impl<Statistic: PositionSummariser> PositionHandler for InMemoryRepository<Stati
         Ok(markets
             .filter_map(|market| {
                 self.open_positions
-                    .get(&determine_position_id(
-                        engine_id,
-                        &market.exchange,
-                        &market.instrument,
-                    ))
+                    .get(&determine_position_id(engine_id, &market.exchange, &market.instrument))
                     .map(Position::clone)
             })
             .collect())
     }
 
-    fn remove_position(
-        &mut self,
-        position_id: &String,
-    ) -> Result<Option<Position>, RepositoryError> {
+    fn remove_position(&mut self, position_id: &String) -> Result<Option<Position>, RepositoryError> {
         Ok(self.open_positions.remove(position_id))
     }
 
-    fn set_exited_position(
-        &mut self,
-        engine_id: Uuid,
-        position: Position,
-    ) -> Result<(), RepositoryError> {
+    fn set_exited_position(&mut self, engine_id: Uuid, position: Position) -> Result<(), RepositoryError> {
         let exited_positions_key = determine_exited_positions_id(engine_id);
 
         match self.closed_positions.get_mut(&exited_positions_key) {
             None => {
-                self.closed_positions
-                    .insert(exited_positions_key, vec![position]);
-            }
+                self.closed_positions.insert(exited_positions_key, vec![position]);
+            },
             Some(closed_positions) => closed_positions.push(position),
         }
         Ok(())
@@ -81,11 +70,9 @@ impl<Statistic: PositionSummariser> PositionHandler for InMemoryRepository<Stati
     }
 }
 
-
 impl<Statistic: PositionSummariser> BalanceHandler for InMemoryRepository<Statistic> {
     fn set_balance(&mut self, engine_id: Uuid, balance: Balance) -> Result<(), RepositoryError> {
-        self.current_balances
-            .insert(Balance::balance_id(engine_id), balance);
+        self.current_balances.insert(Balance::balance_id(engine_id), balance);
         Ok(())
     }
 
@@ -98,11 +85,7 @@ impl<Statistic: PositionSummariser> BalanceHandler for InMemoryRepository<Statis
 }
 
 impl<Statistic: PositionSummariser> StatisticHandler<Statistic> for InMemoryRepository<Statistic> {
-    fn set_statistics(
-        &mut self,
-        market_id: MarketId,
-        statistic: Statistic,
-    ) -> Result<(), RepositoryError> {
+    fn set_statistics(&mut self, market_id: MarketId, statistic: Statistic) -> Result<(), RepositoryError> {
         self.statistics.insert(market_id, statistic);
         Ok(())
     }

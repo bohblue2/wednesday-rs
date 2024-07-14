@@ -3,11 +3,10 @@ use wednesday_model::error::SocketError;
 
 use crate::subscriber::validator::Validator;
 
-
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Deserialize, Serialize)]
 pub struct BinanceSubscriptionResponse {
     result: Option<Vec<String>>,
-    id: u32, 
+    id: u32,
 }
 
 impl Validator for BinanceSubscriptionResponse {
@@ -17,15 +16,11 @@ impl Validator for BinanceSubscriptionResponse {
     {
         if self.result.is_none() {
             Ok(self)
-
         } else {
-            Err(SocketError::Subscribe(
-                "receive failure subscription response: ".to_owned(),
-            ))
+            Err(SocketError::Subscribe("receive failure subscription response: ".to_owned()))
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -45,10 +40,7 @@ mod tests {
                 TestCase {
                     // TC0: input response is Subscribed
                     input: r#"{"id":1,"result":null}"#,
-                    expected: Ok(BinanceSubscriptionResponse {
-                        result: None,
-                        id: 1,
-                    }),
+                    expected: Ok(BinanceSubscriptionResponse { result: None, id: 1 }),
                 },
                 TestCase {
                     // TC1: input response is failed subscription
@@ -65,14 +57,14 @@ mod tests {
                 match (actual, test.expected) {
                     (Ok(actual), Ok(expected)) => {
                         assert_eq!(actual, expected, "TC{} failed", index)
-                    }
+                    },
                     (Err(_), Err(_)) => {
                         // Test passed
-                    }
+                    },
                     (actual, expected) => {
                         // Test failed
                         panic!("TC{index} failed because actual != expected. \nActual: {actual:?}\nExpected: {expected:?}\n");
-                    }
+                    },
                 }
             }
         }
@@ -88,10 +80,7 @@ mod tests {
         let cases = vec![
             TestCase {
                 // TC0: input response is successful subscription
-                input_response: BinanceSubscriptionResponse {
-                    result: None,
-                    id: 1,
-                },
+                input_response: BinanceSubscriptionResponse { result: None, id: 1 },
                 is_valid: true,
             },
             TestCase {

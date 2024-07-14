@@ -1,10 +1,9 @@
+use tokio::sync::mpsc::error::TryRecvError::{Disconnected, Empty};
 use tokio::sync::mpsc::UnboundedReceiver;
-use tokio::sync::mpsc::error::TryRecvError::{Empty, Disconnected};
 
 use crate::model::enums::Feed;
 
 use super::FeedGenerator;
-
 
 pub struct LiveMarketFeed<Event> {
     pub market_rx: UnboundedReceiver<Event>,
@@ -24,8 +23,6 @@ impl<Event> FeedGenerator<Event> for LiveMarketFeed<Event> {
 
 impl<Event> LiveMarketFeed<Event> {
     pub fn new(market_rx: UnboundedReceiver<Event>) -> Self {
-        Self {
-            market_rx,
-        }
-    }   
+        Self { market_rx }
+    }
 }

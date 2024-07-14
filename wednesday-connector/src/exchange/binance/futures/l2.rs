@@ -2,20 +2,25 @@ use async_trait::async_trait;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
-use wednesday_model::{error::{DataError, SocketError}, identifiers::{Identifier, SubscriptionId}, instruments::Instrument, orderbook::OrderBook};
+use wednesday_model::{
+    error::{DataError, SocketError},
+    identifiers::{Identifier, SubscriptionId},
+    instruments::Instrument,
+    orderbook::OrderBook,
+};
 
-use crate::{exchange::binance::book::{BinanceLevel, BinanceOrderBookL2Snapshot}, protocol::http::websocket::WsMessage, transformer::updater::{InstrumentOrderBook, OrderBookUpdater}};
-
+use crate::{
+    exchange::binance::book::{BinanceLevel, BinanceOrderBookL2Snapshot},
+    protocol::http::websocket::WsMessage,
+    transformer::updater::{InstrumentOrderBook, OrderBookUpdater},
+};
 
 /// See docs: <https://binance-docs.github.io/apidocs/futures/en/#order-book>
 pub const REST_BOOK_L2_SNAPSHOT_URL_BINANCE_SPOT: &str = "https://fapi.binance.com/fapi/v1/depth";
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct BinanceFuturesOrderBookL2Delta {
-    #[serde(
-        alias = "s",
-        deserialize_with = "crate::exchange::binance::book::de_ob_l2_subscription_id"
-    )]
+    #[serde(alias = "s", deserialize_with = "crate::exchange::binance::book::de_ob_l2_subscription_id")]
     pub subscription_id: SubscriptionId,
     #[serde(alias = "U")]
     pub first_update_id: u64,
@@ -62,7 +67,6 @@ pub struct BinanceFuturesBookUpdater {
     pub last_update_id: u64,
 }
 
-
 impl BinanceFuturesBookUpdater {
     /// Construct a new BinanceFutures [`OrderBookUpdater`] using the provided last_update_id from
     /// a HTTP snapshot.
@@ -85,13 +89,8 @@ impl BinanceFuturesBookUpdater {
     /// "The first processed event should have U <= lastUpdateId AND u >= lastUpdateId"
     ///
     /// See docs: <https://binance-docs.github.io/apidocs/futures/en/#how-to-manage-a-local-order-book-correctly>
-    pub fn validate_first_update(
-        &self,
-        update: &BinanceFuturesOrderBookL2Delta,
-    ) -> Result<(), DataError> {
-        if update.first_update_id <= self.last_update_id
-            && update.last_update_id >= self.last_update_id
-        {
+    pub fn validate_first_update(&self, update: &BinanceFuturesOrderBookL2Delta) -> Result<(), DataError> {
+        if update.first_update_id <= self.last_update_id && update.last_update_id >= self.last_update_id {
             Ok(())
         } else {
             Err(DataError::InvalidSequence {
@@ -106,10 +105,7 @@ impl BinanceFuturesBookUpdater {
     ///  event's u, otherwise initialize the process from step 3."
     ///
     /// See docs: <https://binance-docs.github.io/apidocs/futures/en/#how-to-manage-a-local-order-book-correctly>
-    pub fn validate_next_update(
-        &self,
-        update: &BinanceFuturesOrderBookL2Delta,
-    ) -> Result<(), DataError> {
+    pub fn validate_next_update(&self, update: &BinanceFuturesOrderBookL2Delta) -> Result<(), DataError> {
         if update.prev_last_update_id == self.last_update_id {
             Ok(())
         } else {
@@ -126,10 +122,7 @@ impl OrderBookUpdater for BinanceFuturesBookUpdater {
     type OrderBook = OrderBook;
     type Update = BinanceFuturesOrderBookL2Delta;
 
-    async fn init<Exchange, Kind>(
-        _: UnboundedSender<WsMessage>,
-        instrument: Instrument,
-    ) -> Result<InstrumentOrderBook<Self>, DataError>
+    async fn init<Exchange, Kind>(_: UnboundedSender<WsMessage>, instrument: Instrument) -> Result<InstrumentOrderBook<Self>, DataError>
     where
         Exchange: Send,
         Kind: Send,
@@ -157,11 +150,7 @@ impl OrderBookUpdater for BinanceFuturesBookUpdater {
         })
     }
 
-    fn update(
-        &mut self,
-        book: &mut Self::OrderBook,
-        update: Self::Update,
-    ) -> Result<Option<Self::OrderBook>, DataError> {
+    fn update(&mut self, book: &mut Self::OrderBook, update: Self::Update) -> Result<Option<Self::OrderBook>, DataError> {
         // BinanceFuturesUsd: How To Manage A Local OrderBook Correctly
         // See Self's Rust Docs for more information on each numbered step
         // See docs: <https://binance-docs.github.io/apidocs/futures/en/#how-to-manage-a-local-order-book-correctly>
@@ -249,7 +238,10 @@ mod tests {
 
     mod binance_futures_book_updater {
 
-        use wednesday_model::{enums::BookSide, orderbook::{Level, OrderBookSide}};
+        use wednesday_model::{
+            enums::BookSide,
+            orderbook::{Level, OrderBookSide},
+        };
 
         use super::*;
 
@@ -277,12 +269,7 @@ mod tests {
             ];
 
             for (index, test) in tests.into_iter().enumerate() {
-                assert_eq!(
-                    test.updater.is_first_update(),
-                    test.expected,
-                    "TC{} failed",
-                    index
-                );
+                assert_eq!(test.updater.is_first_update(), test.expected, "TC{} failed", index);
             }
         }
 
@@ -375,14 +362,14 @@ mod tests {
                 match (actual, test.expected) {
                     (Ok(actual), Ok(expected)) => {
                         assert_eq!(actual, expected, "TC{} failed", index)
-                    }
+                    },
                     (Err(_), Err(_)) => {
                         // Test passed
-                    }
+                    },
                     (actual, expected) => {
                         // Test failed
                         panic!("TC{index} failed because actual != expected. \nActual: {actual:?}\nExpected: {expected:?}\n");
-                    }
+                    },
                 }
             }
         }
@@ -438,14 +425,14 @@ mod tests {
                 match (actual, test.expected) {
                     (Ok(actual), Ok(expected)) => {
                         assert_eq!(actual, expected, "TC{} failed", index)
-                    }
+                    },
                     (Err(_), Err(_)) => {
                         // Test passed
-                    }
+                    },
                     (actual, expected) => {
                         // Test failed
                         panic!("TC{index} failed because actual != expected. \nActual: {actual:?}\nExpected: {expected:?}\n");
-                    }
+                    },
                 }
             }
         }
@@ -491,14 +478,8 @@ mod tests {
                     },
                     book: OrderBook {
                         last_update_ts: time,
-                        bids: OrderBookSide::new(
-                            BookSide::Bid,
-                            vec![Level::new(80, 1), Level::new(100, 1), Level::new(90, 1)],
-                        ),
-                        asks: OrderBookSide::new(
-                            BookSide::Ask,
-                            vec![Level::new(150, 1), Level::new(110, 1), Level::new(120, 1)],
-                        ),
+                        bids: OrderBookSide::new(BookSide::Bid, vec![Level::new(80, 1), Level::new(100, 1), Level::new(90, 1)]),
+                        asks: OrderBookSide::new(BookSide::Ask, vec![Level::new(150, 1), Level::new(110, 1), Level::new(120, 1)]),
                     },
                     input_update: BinanceFuturesOrderBookL2Delta {
                         subscription_id: SubscriptionId::from("subscription_id"),
@@ -507,43 +488,23 @@ mod tests {
                         prev_last_update_id: 100,
                         bids: vec![
                             // Level exists & new value is 0 => remove Level
-                            BinanceLevel {
-                                price: 80.0,
-                                amount: 0.0,
-                            },
+                            BinanceLevel { price: 80.0, amount: 0.0 },
                             // Level exists & new value is > 0 => replace Level
-                            BinanceLevel {
-                                price: 90.0,
-                                amount: 10.0,
-                            },
+                            BinanceLevel { price: 90.0, amount: 10.0 },
                         ],
                         asks: vec![
                             // Level does not exist & new value > 0 => insert new Level
-                            BinanceLevel {
-                                price: 200.0,
-                                amount: 1.0,
-                            },
+                            BinanceLevel { price: 200.0, amount: 1.0 },
                             // Level does not exist & new value is 0 => no change
-                            BinanceLevel {
-                                price: 500.0,
-                                amount: 0.0,
-                            },
+                            BinanceLevel { price: 500.0, amount: 0.0 },
                         ],
                     },
                     expected: Ok(Some(OrderBook {
                         last_update_ts: time,
-                        bids: OrderBookSide::new(
-                            BookSide::Bid,
-                            vec![Level::new(100, 1), Level::new(90, 10)],
-                        ),
+                        bids: OrderBookSide::new(BookSide::Bid, vec![Level::new(100, 1), Level::new(90, 10)]),
                         asks: OrderBookSide::new(
                             BookSide::Ask,
-                            vec![
-                                Level::new(110, 1),
-                                Level::new(120, 1),
-                                Level::new(150, 1),
-                                Level::new(200, 1),
-                            ],
+                            vec![Level::new(110, 1), Level::new(120, 1), Level::new(150, 1), Level::new(200, 1)],
                         ),
                     })),
                 },
@@ -560,17 +521,17 @@ mod tests {
                             ..actual
                         };
                         assert_eq!(actual, expected, "TC{} failed", index)
-                    }
+                    },
                     (Ok(None), Ok(None)) => {
                         // Test passed
-                    }
+                    },
                     (Err(_), Err(_)) => {
                         // Test passed
-                    }
+                    },
                     (actual, expected) => {
                         // Test failed
                         panic!("TC{index} failed because actual != expected. \nActual: {actual:?}\nExpected: {expected:?}\n");
-                    }
+                    },
                 }
             }
         }

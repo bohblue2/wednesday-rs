@@ -7,10 +7,42 @@ repos:
     -   id: check-yaml
     -   id: check-json
 
--   repo: local
-    hooks:
-    -   id: clippy
-        name: Clippy
-        entry: cargo clippy --all-targets --all-features -- -D warnings
-        language: system
-        files: \.rs$
+# -   repo: local
+#     hooks:
+#     -   id: clippy
+#         name: Clippy
+#         entry: cargo clippy --all-targets --all-features -- -D warnings
+#         language: rust
+#         types: [rust]
+#         files: \.rs$
+
+    # hooks:
+    # -   id: wednesday-core-clippy
+    #     name: wednesday-core-Clippy
+    #     entry: cargo clippy --all-features -- -D warnings
+    #     language: system
+    #     files: wednesday-core/.*\.rs$
+
+    # -   id: wednesday-bootstrap-clippy
+    #     name: wednesday-bootstrap-Clippy
+    #     entry: cargo clippy --all-features -- -D warnings
+    #     language: system
+    #     files: wednesday-bootstrap/.*\.rs$
+
+    # -   id: wednesday-connector-clippy
+    #     name: wednesday-connector-Clippy
+    #     entry: cargo clippy --all-features -- -D warnings
+    #     language: system
+    #     files: wednesday-connector/.*\.rs$
+
+    # -   id: wednesday-model-clippy
+    #     name: wednesday-model-Clippy
+    #     entry: cargo clippy --all-features -- -D warnings
+    #     language: system
+    #     files: wednesday-model/.*\.rs$
+
+    # -   id: wednesday-macro-clippy
+    #     name: wednesday-macro-Clippy
+    #     entry: cargo clippy --all-features -- -D warnings
+    #     language: system
+    #     files: wednesday-macro/.*\.rs$

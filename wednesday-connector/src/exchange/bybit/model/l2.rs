@@ -1,13 +1,21 @@
-use std::collections::HashMap;
-
 use async_trait::async_trait;
 use chrono::Utc;
 use serde::{Deserialize, Deserializer, Serialize};
 use tokio::sync::mpsc::UnboundedSender;
-use wednesday_model::{deserialization, error::DataError, identifiers::{Identifier, SubscriptionId}, instruments::Instrument, orderbook::{Level, OrderBook}};
+use wednesday_model::{
+    deserialization,
+    error::DataError,
+    identifiers::{Identifier, SubscriptionId},
+    instruments::Instrument,
+    orderbook::{Level, OrderBook},
+};
 
-
-use crate::{exchange::bybit::channel::BybitChannel, protocol::http::websocket::WsMessage, subscriber::subscription::ExchangeSubscription, transformer::updater::{InstrumentOrderBook, OrderBookUpdater}};
+use crate::{
+    exchange::bybit::channel::BybitChannel,
+    protocol::http::websocket::WsMessage,
+    subscriber::subscription::ExchangeSubscription,
+    transformer::updater::{InstrumentOrderBook, OrderBookUpdater},
+};
 
 use super::message::BybitPayload;
 
@@ -55,8 +63,7 @@ pub fn de_ob_l2_subscription_id<'de, D>(deserializer: D) -> Result<SubscriptionI
 where
     D: Deserializer<'de>,
 {
-    <&str as Deserialize>::deserialize(deserializer)
-        .map(|market| ExchangeSubscription::from((BybitChannel::ORDER_BOOK_L2, market)).id())
+    <&str as Deserialize>::deserialize(deserializer).map(|market| ExchangeSubscription::from((BybitChannel::ORDER_BOOK_L2, market)).id())
 }
 
 pub fn de_ob_l2_levels<'de, D>(deserializer: D) -> Result<Vec<BybitLevel>, D::Error>
@@ -66,8 +73,8 @@ where
     let raw_levels: Vec<[String; 2]> = Deserialize::deserialize(deserializer)?;
     let levels = raw_levels
         .into_iter()
-        .map(|[price, amount]| BybitLevel { 
-            price: price.parse().unwrap(), 
+        .map(|[price, amount]| BybitLevel {
+            price: price.parse().unwrap(),
             amount: amount.parse().unwrap(),
         })
         .collect();
@@ -94,11 +101,8 @@ impl BybitBookUpdater {
 impl OrderBookUpdater for BybitBookUpdater {
     type OrderBook = OrderBook;
     type Update = BybitOrderBookL2;
-    
-    async fn init<Exchange, Kind>(
-        _: UnboundedSender<WsMessage>,
-        instrument: Instrument,
-    ) -> Result<InstrumentOrderBook<Self>, DataError>
+
+    async fn init<Exchange, Kind>(_: UnboundedSender<WsMessage>, instrument: Instrument) -> Result<InstrumentOrderBook<Self>, DataError>
     where
         Exchange: Send,
         Kind: Send,
@@ -109,14 +113,10 @@ impl OrderBookUpdater for BybitBookUpdater {
             instrument,
             updater: Self::new(0),
             book: OrderBook::default(),
-        })    
+        })
     }
-    
-    fn update(
-        &mut self,
-        book: &mut Self::OrderBook,
-        update: Self::Update,
-    ) -> Result<Option<Self::OrderBook>, DataError> {
+
+    fn update(&mut self, book: &mut Self::OrderBook, update: Self::Update) -> Result<Option<Self::OrderBook>, DataError> {
         if update.data.last_update_id <= self.last_update_id {
             return Ok(None);
         }
@@ -128,7 +128,6 @@ impl OrderBookUpdater for BybitBookUpdater {
         Ok(Some(book.snapshot()))
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -171,29 +170,65 @@ mod tests {
         let parsed: BybitOrderBookL2 = serde_json::from_str(input).unwrap();
         assert_eq!(
             parsed,
-            BybitOrderBookL2 { 
-                subscription_id: SubscriptionId::from("orderbook.50|BTCUSDT"), 
-                r#type: "delta".to_string(), 
+            BybitOrderBookL2 {
+                subscription_id: SubscriptionId::from("orderbook.50|BTCUSDT"),
+                r#type: "delta".to_string(),
                 exchange_ts: datetime_utc_from_epoch_duration(Duration::from_millis(1687940967466)),
                 data: BybitOrderBookL2Delta {
                     symbol: "BTCUSDT".to_string(),
                     last_update_id: 177400507,
                     sequence: 66544703342,
                     bids: vec![
-                        BybitLevel { price: 30247.20, amount: 30.028 },
-                        BybitLevel { price: 30245.40, amount: 0.224 },
-                        BybitLevel { price: 30242.10, amount: 1.593 },
-                        BybitLevel { price: 30240.30, amount: 1.305 },
-                        BybitLevel { price: 30240.00, amount: 0.0 },
+                        BybitLevel {
+                            price: 30247.20,
+                            amount: 30.028
+                        },
+                        BybitLevel {
+                            price: 30245.40,
+                            amount: 0.224
+                        },
+                        BybitLevel {
+                            price: 30242.10,
+                            amount: 1.593
+                        },
+                        BybitLevel {
+                            price: 30240.30,
+                            amount: 1.305
+                        },
+                        BybitLevel {
+                            price: 30240.00,
+                            amount: 0.0
+                        },
                     ],
                     asks: vec![
-                        BybitLevel { price: 30248.70, amount: 0.0 },
-                        BybitLevel { price: 30249.30, amount: 0.892 },
-                        BybitLevel { price: 30249.50, amount: 1.778 },
-                        BybitLevel { price: 30249.60, amount: 0.0 },
-                        BybitLevel { price: 30251.90, amount: 2.947 },
-                        BybitLevel { price: 30252.20, amount: 0.659 },
-                        BybitLevel { price: 30252.50, amount: 4.591 },
+                        BybitLevel {
+                            price: 30248.70,
+                            amount: 0.0
+                        },
+                        BybitLevel {
+                            price: 30249.30,
+                            amount: 0.892
+                        },
+                        BybitLevel {
+                            price: 30249.50,
+                            amount: 1.778
+                        },
+                        BybitLevel {
+                            price: 30249.60,
+                            amount: 0.0
+                        },
+                        BybitLevel {
+                            price: 30251.90,
+                            amount: 2.947
+                        },
+                        BybitLevel {
+                            price: 30252.20,
+                            amount: 0.659
+                        },
+                        BybitLevel {
+                            price: 30252.50,
+                            amount: 4.591
+                        },
                     ],
                 }
             }
@@ -201,9 +236,16 @@ mod tests {
     }
     mod bybit_futures_book_updater {
         use chrono::Utc;
-        use wednesday_model::{enums::BookSide, identifiers::SubscriptionId, orderbook::{Level, OrderBook, OrderBookSide}};
+        use wednesday_model::{
+            enums::BookSide,
+            identifiers::SubscriptionId,
+            orderbook::{Level, OrderBook, OrderBookSide},
+        };
 
-        use crate::exchange::bybit::model::l2::{tests::{BybitPayload, DataError, OrderBookUpdater}, BybitBookUpdater, BybitLevel, BybitOrderBookL2Delta};
+        use crate::exchange::bybit::model::l2::{
+            tests::{BybitPayload, DataError, OrderBookUpdater},
+            BybitBookUpdater, BybitLevel, BybitOrderBookL2Delta,
+        };
 
         #[test]
         fn update() {
@@ -224,8 +266,20 @@ mod tests {
                     },
                     book: OrderBook {
                         last_update_ts: time,
-                        bids: OrderBookSide::new(BookSide::Bid, vec![Level { price: 30247.20, amount: 30.028 }]),
-                        asks: OrderBookSide::new(BookSide::Ask, vec![Level { price: 30248.70, amount: 0.0 }]),
+                        bids: OrderBookSide::new(
+                            BookSide::Bid,
+                            vec![Level {
+                                price: 30247.20,
+                                amount: 30.028,
+                            }],
+                        ),
+                        asks: OrderBookSide::new(
+                            BookSide::Ask,
+                            vec![Level {
+                                price: 30248.70,
+                                amount: 0.0,
+                            }],
+                        ),
                     },
                     input_update: BybitPayload {
                         subscription_id: SubscriptionId::from("orderbook.50|BTCUSDT"),
@@ -236,42 +290,105 @@ mod tests {
                             last_update_id: 177400507,
                             sequence: 66544703342,
                             bids: vec![
-                                BybitLevel { price: 30247.20, amount: 30.028 },
-                                BybitLevel { price: 30245.40, amount: 0.224 },
-                                BybitLevel { price: 30242.10, amount: 1.593 },
-                                BybitLevel { price: 30240.30, amount: 1.305 },
-                                BybitLevel { price: 30240.00, amount: 0.0 },
+                                BybitLevel {
+                                    price: 30247.20,
+                                    amount: 30.028,
+                                },
+                                BybitLevel {
+                                    price: 30245.40,
+                                    amount: 0.224,
+                                },
+                                BybitLevel {
+                                    price: 30242.10,
+                                    amount: 1.593,
+                                },
+                                BybitLevel {
+                                    price: 30240.30,
+                                    amount: 1.305,
+                                },
+                                BybitLevel {
+                                    price: 30240.00,
+                                    amount: 0.0,
+                                },
                             ],
                             asks: vec![
-                                BybitLevel { price: 30248.70, amount: 0.0 },
-                                BybitLevel { price: 30249.30, amount: 0.892 },
-                                BybitLevel { price: 30249.50, amount: 1.778 },
-                                BybitLevel { price: 30249.60, amount: 0.0 },
-                                BybitLevel { price: 30251.90, amount: 2.947 },
-                                BybitLevel { price: 30252.20, amount: 0.659 },
-                                BybitLevel { price: 30252.50, amount: 4.591 },
+                                BybitLevel {
+                                    price: 30248.70,
+                                    amount: 0.0,
+                                },
+                                BybitLevel {
+                                    price: 30249.30,
+                                    amount: 0.892,
+                                },
+                                BybitLevel {
+                                    price: 30249.50,
+                                    amount: 1.778,
+                                },
+                                BybitLevel {
+                                    price: 30249.60,
+                                    amount: 0.0,
+                                },
+                                BybitLevel {
+                                    price: 30251.90,
+                                    amount: 2.947,
+                                },
+                                BybitLevel {
+                                    price: 30252.20,
+                                    amount: 0.659,
+                                },
+                                BybitLevel {
+                                    price: 30252.50,
+                                    amount: 4.591,
+                                },
                             ],
-                        }
+                        },
                     },
                     expected: Ok(Some(OrderBook {
                         last_update_ts: time,
                         bids: OrderBookSide::new(
                             BookSide::Bid,
                             vec![
-                                Level { price: 30247.20, amount: 30.028 },
-                                Level { price: 30245.40, amount: 0.224 },
-                                Level { price: 30242.10, amount: 1.593 },
-                                Level { price: 30240.30, amount: 1.305 },
+                                Level {
+                                    price: 30247.20,
+                                    amount: 30.028,
+                                },
+                                Level {
+                                    price: 30245.40,
+                                    amount: 0.224,
+                                },
+                                Level {
+                                    price: 30242.10,
+                                    amount: 1.593,
+                                },
+                                Level {
+                                    price: 30240.30,
+                                    amount: 1.305,
+                                },
                             ],
                         ),
                         asks: OrderBookSide::new(
                             BookSide::Ask,
                             vec![
-                                Level { price: 30249.30, amount: 0.892 },
-                                Level { price: 30249.50, amount: 1.778 },
-                                Level { price: 30251.90, amount: 2.947 },
-                                Level { price: 30252.20, amount: 0.659 },
-                                Level { price: 30252.50, amount: 4.591 },
+                                Level {
+                                    price: 30249.30,
+                                    amount: 0.892,
+                                },
+                                Level {
+                                    price: 30249.50,
+                                    amount: 1.778,
+                                },
+                                Level {
+                                    price: 30251.90,
+                                    amount: 2.947,
+                                },
+                                Level {
+                                    price: 30252.20,
+                                    amount: 0.659,
+                                },
+                                Level {
+                                    price: 30252.50,
+                                    amount: 4.591,
+                                },
                             ],
                         ),
                     })),
@@ -283,12 +400,8 @@ mod tests {
                     },
                     book: OrderBook {
                         last_update_ts: time,
-                        bids: OrderBookSide::new(
-                            BookSide::Bid, 
-                            vec![Level::new(80, 1), Level::new(10, 1), Level::new(90, 1)]),
-                        asks: OrderBookSide::new(
-                            BookSide::Ask, 
-                            vec![Level::new(150, 1), Level::new(110, 1), Level::new(120, 1)]),
+                        bids: OrderBookSide::new(BookSide::Bid, vec![Level::new(80, 1), Level::new(10, 1), Level::new(90, 1)]),
+                        asks: OrderBookSide::new(BookSide::Ask, vec![Level::new(150, 1), Level::new(110, 1), Level::new(120, 1)]),
                     },
                     input_update: BybitPayload {
                         subscription_id: SubscriptionId::from("orderbook.50|BTCUSDT"),
@@ -298,33 +411,16 @@ mod tests {
                             symbol: "BTCUSDT".to_string(),
                             last_update_id: 1,
                             sequence: 1,
-                            bids: vec![
-                                BybitLevel { price: 80.0, amount: 0.0 },
-                                BybitLevel { price: 90.0, amount: 10.0 },
-                            ],
-                            asks: vec![
-                                BybitLevel { price: 200.0, amount: 1.0 },
-                                BybitLevel { price: 500.0, amount: 0.0 },
-                            ],
+                            bids: vec![BybitLevel { price: 80.0, amount: 0.0 }, BybitLevel { price: 90.0, amount: 10.0 }],
+                            asks: vec![BybitLevel { price: 200.0, amount: 1.0 }, BybitLevel { price: 500.0, amount: 0.0 }],
                         },
                     },
                     expected: Ok(Some(OrderBook {
                         last_update_ts: time,
-                        bids: OrderBookSide::new(
-                            BookSide::Bid,
-                            vec![
-                                Level::new(90, 10),
-                                Level::new(10, 1), 
-                            ],
-                        ),
+                        bids: OrderBookSide::new(BookSide::Bid, vec![Level::new(90, 10), Level::new(10, 1)]),
                         asks: OrderBookSide::new(
                             BookSide::Ask,
-                            vec![
-                                Level::new(110, 1),
-                                Level::new(120, 1),
-                                Level::new(150, 1),
-                                Level::new(200, 1),
-                            ],
+                            vec![Level::new(110, 1), Level::new(120, 1), Level::new(150, 1), Level::new(200, 1)],
                         ),
                     })),
                 },
@@ -341,20 +437,19 @@ mod tests {
                             ..actual
                         };
                         assert_eq!(actual, expected, "TC{} failed", index)
-                    }
+                    },
                     (Ok(None), Ok(None)) => {
                         // Test passed
-                    }
+                    },
                     (Err(_), Err(_)) => {
                         // Test passed
-                    }
+                    },
                     (actual, expected) => {
                         // Test failed
                         panic!("TC{index} failed because actual != expected. \nActual: {actual:?}\nExpected: {expected:?}\n");
-                    }
+                    },
                 }
             }
-
         }
-     }
+    }
 }

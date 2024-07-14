@@ -1,7 +1,11 @@
-
 use wednesday_model::identifiers::ExchangeId;
 
-use crate::{exchange::connector::ExchangeServer, stream::{protocol::websocket::ExchangeWsStream, selector::StreamSelector}, subscriber::subscription::kind::OrderBooksL2, transformer::stateful::MultiBookTransformer};
+use crate::{
+    exchange::connector::ExchangeServer,
+    stream::{protocol::websocket::ExchangeWsStream, selector::StreamSelector},
+    subscriber::subscription::kind::OrderBooksL2,
+    transformer::stateful::MultiBookTransformer,
+};
 
 use self::l2::BinanceFuturesBookUpdater;
 
@@ -19,13 +23,12 @@ pub struct BinanceServerFuturesUsd;
 
 impl ExchangeServer for BinanceServerFuturesUsd {
     const ID: ExchangeId = ExchangeId::BinanceFuturesUsd;
-    
+
     fn ws_url() -> &'static str {
         WEBSOCKET_BASE_URL_BINANCE_FUTURES_USD
     }
 }
 
 impl StreamSelector<OrderBooksL2> for BinanceFuturesUsd {
-    type Stream =
-        ExchangeWsStream<MultiBookTransformer<Self, OrderBooksL2, BinanceFuturesBookUpdater>>;
+    type Stream = ExchangeWsStream<MultiBookTransformer<Self, OrderBooksL2, BinanceFuturesBookUpdater>>;
 }

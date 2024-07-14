@@ -1,12 +1,14 @@
-use std::ops::Sub;
-
 use chrono::{DateTime, Utc};
-use serde::{de::{Error, Unexpected}, Deserialize, Serialize};
-use wednesday_model::{deserialization, identifiers::{Identifier, SubscriptionId}};
+use serde::{
+    de::{Error, Unexpected},
+    Deserialize, Serialize,
+};
+use wednesday_model::{
+    deserialization,
+    identifiers::{Identifier, SubscriptionId},
+};
 
-use crate::{exchange::{binance::subscription, bybit::{channel::BybitChannel, subscription::BybitSubscriptionResponse}}};
-
-use super::{l2::{BybitOrderBookL2, BybitOrderBookL2Delta}, trade::BybitTrade};
+use super::{l2::BybitOrderBookL2, trade::BybitTrade};
 
 // #[derive(Debug, Serialize, Deserialize)]
 // #[serde(untagged)]
@@ -18,13 +20,13 @@ use super::{l2::{BybitOrderBookL2, BybitOrderBookL2Delta}, trade::BybitTrade};
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize)]
 pub struct BybitPayload<T> {
-    #[serde(alias="topic", deserialize_with = "de_bybit_message_subscription_id")]
+    #[serde(alias = "topic", deserialize_with = "de_bybit_message_subscription_id")]
     pub subscription_id: SubscriptionId,
-    #[serde(alias="type")]
+    #[serde(alias = "type")]
     pub r#type: String,
-    #[serde(alias="ts", deserialize_with = "deserialization::de_u64_epoch_ms_as_datetime_utc")]
+    #[serde(alias = "ts", deserialize_with = "deserialization::de_u64_epoch_ms_as_datetime_utc")]
     pub exchange_ts: DateTime<Utc>,
-    pub data: T
+    pub data: T,
 }
 
 pub fn de_bybit_message_subscription_id<'de, D>(deserializer: D) -> Result<SubscriptionId, D::Error>
@@ -60,7 +62,12 @@ where
             Ok(SubscriptionId::from(subscription_id))
         },
         (Some(&"orderbook"), level, market) => {
-            let subscription_id = format!("{}.{}|{}", topic_type.unwrap(), level.unwrap_or_default(), market.unwrap_or_default());
+            let subscription_id = format!(
+                "{}.{}|{}",
+                topic_type.unwrap(),
+                level.unwrap_or_default(),
+                market.unwrap_or_default()
+            );
             Ok(SubscriptionId::from(subscription_id))
         },
         _ => Err(Error::invalid_value(
@@ -84,14 +91,11 @@ impl Identifier<Option<SubscriptionId>> for BybitTrade {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
 
     mod de {
         use wednesday_model::error::SocketError;
 
-        use crate::exchange::bybit::subscription::BybitReturnMessage;
-
-        use super::*;
+        use crate::exchange::bybit::subscription::{BybitReturnMessage, BybitSubscriptionResponse};
 
         #[test]
         fn test_bybit_pong() {
@@ -126,14 +130,14 @@ mod tests {
                 match (actual, test.expected) {
                     (Ok(actual), Ok(expected)) => {
                         assert_eq!(actual, expected, "TC{} failed", index)
-                    }
+                    },
                     (Err(_), Err(_)) => {
                         // Test passed
-                    }
+                    },
                     (actual, expected) => {
                         // Test failed
                         panic!("TC{index} failed because actual != expected. \nActual: {actual:?}\nExpected: {expected:?}\n");
-                    }
+                    },
                 }
             }
         }

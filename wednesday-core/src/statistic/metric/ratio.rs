@@ -46,10 +46,7 @@ impl SharpeRatio {
         // Calculate Sharpe Ratio Per Trade
         self.sharpe_ratio_per_trade = match pnl_returns.total.dispersion.std_dev == 0.0 {
             true => 0.0,
-            false => {
-                (pnl_returns.total.mean - self.risk_free_return)
-                    / pnl_returns.total.dispersion.std_dev
-            }
+            false => (pnl_returns.total.mean - self.risk_free_return) / pnl_returns.total.dispersion.std_dev,
         };
     }
 }
@@ -87,10 +84,7 @@ impl SortinoRatio {
         // Calculate Sortino Ratio Per Trade
         self.sortino_ratio_per_trade = match pnl_returns.losses.dispersion.std_dev == 0.0 {
             true => 0.0,
-            false => {
-                (pnl_returns.total.mean - self.risk_free_return)
-                    / pnl_returns.losses.dispersion.std_dev
-            }
+            false => (pnl_returns.total.mean - self.risk_free_return) / pnl_returns.losses.dispersion.std_dev,
         };
     }
 }
@@ -446,8 +440,7 @@ mod tests {
         ];
 
         for test in test_cases {
-            let actual =
-                calculate_annual(test.ratio_per_trade, test.trades_per_day, test.trading_days);
+            let actual = calculate_annual(test.ratio_per_trade, test.trades_per_day, test.trading_days);
             assert_eq!(actual, test.expected_annual)
         }
     }

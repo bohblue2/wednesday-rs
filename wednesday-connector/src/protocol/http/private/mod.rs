@@ -35,11 +35,7 @@ pub trait Signer {
     ///     }
     /// }
     /// ```
-    fn config<'a, Request>(
-        &'a self,
-        request: Request,
-        builder: &reqwest::RequestBuilder,
-    ) -> Result<Self::Config<'a>, SocketError>
+    fn config<'a, Request>(&'a self, request: Request, builder: &reqwest::RequestBuilder) -> Result<Self::Config<'a>, SocketError>
     where
         Request: RestRequest;
 
@@ -77,7 +73,6 @@ pub trait Signer {
     /// }
     /// ```
     fn build_signed_request<'a>(
-        
         config: Self::Config<'a>,
         builder: reqwest::RequestBuilder,
         signature: String,
@@ -99,17 +94,13 @@ where
     Hmac: Mac + Clone,
     SigEncoder: Encoder,
 {
-    fn build<Request>(
-        &self,
-        request: Request,
-        builder: reqwest::RequestBuilder,
-    ) -> Result<reqwest::Request, SocketError>
+    fn build<Request>(&self, request: Request, builder: reqwest::RequestBuilder) -> Result<reqwest::Request, SocketError>
     where
         Request: RestRequest,
     {
         // Build configuration required for generating signed requests
         let config = self.signer.config(request, &builder)?;
-        
+
         if Request::sign_required().unwrap_or(false) {
             debug!("Generating signed request")
         } else {
@@ -131,10 +122,6 @@ where
 impl<Sig, Hmac, SigEncoder> RequestSigner<Sig, Hmac, SigEncoder> {
     /// Construct a new [`Self`] using the provided API specific configuration.
     pub fn new(signer: Sig, mac: Hmac, encoder: SigEncoder) -> Self {
-        Self {
-            signer,
-            mac,
-            encoder,
-        }
+        Self { signer, mac, encoder }
     }
 }

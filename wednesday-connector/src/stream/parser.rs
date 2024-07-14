@@ -1,15 +1,12 @@
 // original file path: intergration-rs/src/protocol/mod.rs
 
-use std::{rc::Rc, sync::Arc};
+use std::rc::Rc;
 
 /// Contains `StreamParser` implementations for transforming communication protocol specific
 /// messages into a generic output data structure.
-
-
 use futures::Stream;
 use serde::de::DeserializeOwned;
 use wednesday_model::error::SocketError;
-
 
 /// Contains useful `WebSocket` type aliases and a default `WebSocket` implementation of a
 /// [`StreamParser`].
@@ -26,11 +23,8 @@ pub trait StreamParser {
     type Message;
     type Error;
 
-
     // NOTE_0002: NOTE_0001 구현을 위해서 StreamTransforemr::Pong 처리를 위해 input이 RC로 감싸짐.
-    fn parse<Output>(
-        input: Rc<Result<Self::Message, Self::Error>>,
-    ) -> Option<Result<Output, SocketError>>
+    fn parse<Output>(input: Rc<Result<Self::Message, Self::Error>>) -> Option<Result<Output, SocketError>>
     where
         Output: DeserializeOwned;
 }

@@ -1,4 +1,3 @@
-
 use wednesday_model::identifiers::ExchangeId;
 
 use crate::exchange::connector::ExchangeServer;

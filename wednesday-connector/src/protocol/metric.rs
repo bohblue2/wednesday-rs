@@ -50,10 +50,7 @@ impl Tag {
     where
         S: Into<String>,
     {
-        Self {
-            key,
-            value: value.into(),
-        }
+        Self { key, value: value.into() }
     }
 }
 
@@ -71,10 +68,7 @@ impl Field {
     where
         S: Into<Value>,
     {
-        Self {
-            key,
-            value: value.into(),
-        }
+        Self { key, value: value.into() }
     }
 }
 

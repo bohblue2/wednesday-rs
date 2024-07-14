@@ -1,7 +1,7 @@
-pub mod updater;
+pub mod builder;
 pub mod enterer;
 pub mod exiter;
-pub mod builder;
+pub mod updater;
 
 use std::fmt::{self, Display};
 
@@ -12,8 +12,13 @@ use wednesday_model::{identifiers::Exchange, instruments::Instrument};
 
 use self::builder::PositionBuilder;
 
-use super::{balance::Balance, decision::Decision, fee::{FeeAmount, Fees}, fill_event::FillEvent, portfolio_error::PortfolioError};
-
+use super::{
+    balance::Balance,
+    decision::Decision,
+    fee::{FeeAmount, Fees},
+    fill_event::FillEvent,
+    portfolio_error::PortfolioError,
+};
 
 pub type PositionId = String;
 
@@ -44,7 +49,6 @@ impl Display for PositionSide {
             }
         )
     }
-
 }
 
 #[derive(Debug, Clone)]
@@ -92,20 +96,9 @@ pub struct Position {
     pub realised_profit_loss: f64,
 }
 
-
-pub fn determine_position_id(
-    exgine_id: Uuid,
-    exchange: &Exchange,
-    instrument: &Instrument,
-) -> PositionId {
-    format!(
-        "{}_{}_{}_position",
-        exgine_id,
-        exchange,
-        instrument
-    )
+pub fn determine_position_id(exgine_id: Uuid, exchange: &Exchange, instrument: &Instrument) -> PositionId {
+    format!("{}_{}_{}_position", exgine_id, exchange, instrument)
 }
-
 
 impl Position {
     /// Returns a [`PositionBuilder`] instance.
@@ -124,9 +117,7 @@ impl Position {
         match fill.decision {
             Decision::Long if fill.quantity.is_sign_positive() => Ok(PositionSide::Buy),
             Decision::Short if fill.quantity.is_sign_negative() => Ok(PositionSide::Sell),
-            Decision::CloseLong | Decision::CloseShort => {
-                Err(PortfolioError::CannotEnterPositionWithExitFill)
-            }
+            Decision::CloseLong | Decision::CloseShort => Err(PortfolioError::CannotEnterPositionWithExitFill),
             _ => Err(PortfolioError::ParseEntrySide),
         }
     }

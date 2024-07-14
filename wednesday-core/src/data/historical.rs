@@ -14,9 +14,7 @@ where
     Iter: Iterator<Item = Event>,
 {
     fn next(&mut self) -> Feed<Event> {
-        self.iterator
-            .next()
-            .map_or(Feed::Finished, Feed::Next)
+        self.iterator.next().map_or(Feed::Finished, Feed::Next)
     }
 }
 
@@ -24,7 +22,7 @@ impl<Iter, Event> HistoricalMarketFeed<Iter, Event>
 where
     Iter: Iterator<Item = Event>,
 {
-    pub fn new<IntoIter>(iterator: IntoIter) -> Self 
+    pub fn new<IntoIter>(iterator: IntoIter) -> Self
     where
         IntoIter: IntoIterator<IntoIter = Iter, Item = Event>,
     {

@@ -1,10 +1,10 @@
 [workspace]
-members = [ 
-    "wednesday-bootstrap", 
-    "wednesday-connector", 
-    "wednesday-core", 
-    "wednesday-macro", 
-    "wednesday-model", 
+members = [
+    "wednesday-bootstrap",
+    "wednesday-connector",
+    "wednesday-core",
+    "wednesday-macro",
+    "wednesday-model",
 ]
 resolver = "2"
 
@@ -26,3 +26,5 @@ wednesday-connector = { path = "wednesday-connector" }
 wednesday-core ={ path = "wednesday-core" }
 wednesday-macro = { path = "wednesday-macro" }
 wednesday-model = { path = "wednesday-model" }
+
+clippy = "0.0.302"

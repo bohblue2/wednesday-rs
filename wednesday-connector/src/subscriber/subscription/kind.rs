@@ -1,5 +1,9 @@
 use wednesday_macro::{DeSubscriptionKind, SerSubscriptionKind};
-use wednesday_model::{bar::Bar, orderbook::{OrderBook, OrderBookL1}, trade::PublicTrade};
+use wednesday_model::{
+    bar::Bar,
+    orderbook::{OrderBook, OrderBookL1},
+    trade::PublicTrade,
+};
 
 use super::SubscriptionKind;
 
@@ -27,7 +31,6 @@ pub struct PublicTrades;
 impl SubscriptionKind for PublicTrades {
     type Event = PublicTrade;
 }
-
 
 #[derive(Clone, Copy, PartialEq, PartialOrd, Ord, Eq, Debug, Hash, SerSubscriptionKind, DeSubscriptionKind)]
 pub struct Bars;

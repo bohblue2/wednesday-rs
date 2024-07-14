@@ -1,22 +1,42 @@
-
 use std::{collections::HashMap, iter::Product, path::Component, sync::Arc, thread, time::Duration};
 
 use parking_lot::Mutex;
 use prettytable::Table;
 use serde::Serialize;
-use tokio::{runtime::Handle, sync::{mpsc, oneshot}};
+use tokio::{
+    runtime::Handle,
+    sync::{mpsc, oneshot},
+};
 use tracing::{error, info, warn};
 use uuid::Uuid;
-use wednesday_model::{events::{DataKind, MarketEvent}, identifiers::{Market, MarketId}};
+use wednesday_model::{
+    events::{DataKind, MarketEvent},
+    identifiers::{Market, MarketId},
+};
 
-use crate::{data::FeedGenerator, execution::ExecutionClient, model::{engine_error::EngineError, event::{Event, EventTx, MessageTransmitter}, position::Position}, portfolio::{generator::OrderGenerator, repository::{PositionHandler, StatisticHandler}, updater::{FillUpdater, MarketUpdater}}, statistic::summary::{self, combine, PositionSummariser, TableBuilder}, strategy::SignalGenerator};
+use crate::{
+    data::FeedGenerator,
+    execution::ExecutionClient,
+    model::{
+        engine_error::EngineError,
+        event::{Event, EventTx, MessageTransmitter},
+        position::Position,
+    },
+    portfolio::{
+        generator::OrderGenerator,
+        repository::{PositionHandler, StatisticHandler},
+        updater::{FillUpdater, MarketUpdater},
+    },
+    statistic::summary::{self, combine, PositionSummariser, TableBuilder},
+    strategy::SignalGenerator,
+};
 
 use self::{builder::EngineBuilder, commond::EngineCommand, trader::Trader};
 
+pub mod builder;
 pub mod commond;
 pub mod trader;
 pub mod trader_builder;
-pub mod builder;
 pub struct EngineComponents<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
 where
     EventTx: MessageTransmitter<Event> + Send,
@@ -26,12 +46,12 @@ where
     Strategy: SignalGenerator + Send,
     Execution: ExecutionClient + Send,
 {
-    pub engine_id: Uuid, 
+    pub engine_id: Uuid,
     pub command_rx: mpsc::Receiver<EngineCommand>,
     pub portfolio: Arc<Mutex<Portfolio>>,
     pub traders: Vec<Trader<EventTx, Statistic, Portfolio, Data, Strategy, Execution>>,
     pub trader_command_txs: HashMap<Market, mpsc::Sender<EngineCommand>>,
-    pub statistics_summary: Statistic
+    pub statistics_summary: Statistic,
 }
 
 #[derive(Debug)]
@@ -39,13 +59,7 @@ pub struct TradingEngine<EventTx, Statistic, Portfolio, Data, Strategy, Executio
 where
     EventTx: MessageTransmitter<Event>,
     Statistic: PositionSummariser + Serialize + Send,
-    Portfolio: PositionHandler 
-        + StatisticHandler<Statistic>
-        + MarketUpdater
-        + OrderGenerator
-        + FillUpdater
-        + Send
-        + 'static,
+    Portfolio: PositionHandler + StatisticHandler<Statistic> + MarketUpdater + OrderGenerator + FillUpdater + Send + 'static,
     Data: FeedGenerator<MarketEvent<DataKind>> + Send + 'static,
     Strategy: SignalGenerator + Send,
     Execution: ExecutionClient + Send,
@@ -55,44 +69,31 @@ where
     pub(crate) portfolio: Arc<Mutex<Portfolio>>,
     pub(crate) traders: Vec<Trader<EventTx, Statistic, Portfolio, Data, Strategy, Execution>>,
     pub(crate) trader_command_txs: HashMap<Market, mpsc::Sender<EngineCommand>>,
-    pub(crate) statistics_summary: Statistic
+    pub(crate) statistics_summary: Statistic,
 }
 
-impl<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
-    TradingEngine<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
+impl<EventTx, Statistic, Portfolio, Data, Strategy, Execution> TradingEngine<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
 where
     EventTx: MessageTransmitter<Event> + Send + 'static,
     Statistic: PositionSummariser + TableBuilder + Serialize + Send + 'static,
-    Portfolio: PositionHandler 
-        + StatisticHandler<Statistic>
-        + MarketUpdater
-        + OrderGenerator
-        + FillUpdater
-        + Send
-        + 'static,
+    Portfolio: PositionHandler + StatisticHandler<Statistic> + MarketUpdater + OrderGenerator + FillUpdater + Send + 'static,
     Data: FeedGenerator<MarketEvent<DataKind>> + Send,
     Strategy: SignalGenerator + Send + 'static,
     Execution: ExecutionClient + Send + 'static,
 {
-    pub fn new(
-        component: EngineComponents<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
-    ) -> Self {
-        info!(
-            engine_id = &*format!("{}", component.engine_id),
-            "constructed new engine context"
-        );
+    pub fn new(component: EngineComponents<EventTx, Statistic, Portfolio, Data, Strategy, Execution>) -> Self {
+        info!(engine_id = &*format!("{}", component.engine_id), "constructed new engine context");
         Self {
             engine_id: component.engine_id,
             command_rx: component.command_rx,
             portfolio: component.portfolio,
             traders: component.traders,
             trader_command_txs: component.trader_command_txs,
-            statistics_summary: component.statistics_summary
+            statistics_summary: component.statistics_summary,
         }
     }
 
-    pub fn builder() -> EngineBuilder<EventTx, Statistic, Portfolio, Data, Strategy, Execution>
-    {
+    pub fn builder() -> EngineBuilder<EventTx, Statistic, Portfolio, Data, Strategy, Execution> {
         EngineBuilder::new()
     }
 
@@ -109,19 +110,19 @@ where
                 command = self.command_rx.recv() => {
                     if let Some(command) = command {
                         match command {
-                            EngineCommand::FetchOpenPositions(position_tx) => 
+                            EngineCommand::FetchOpenPositions(position_tx) =>
                                 { self.fetch_open_positions(position_tx).await;},
-                            EngineCommand::Terminate(meesgae) => 
+                            EngineCommand::Terminate(meesgae) =>
                                 { self.terminate_traders(meesgae).await; break; },
-                            EngineCommand::ExitAllPositions => 
+                            EngineCommand::ExitAllPositions =>
                                 { self.exit_all_positions().await; },
-                            EngineCommand::ExitPosition(market) => 
-                                { self.exit_position(market).await; }, 
+                            EngineCommand::ExitPosition(market) =>
+                                { self.exit_position(market).await; },
                         }
                     } else {
                         break;
                     }
-                } 
+                }
             }
         }
 
@@ -142,10 +143,7 @@ where
         tokio::spawn(async move {
             for handle in thread_handles {
                 if let Err(err) = handle.join() {
-                    error!(
-                        error = &*format!("{:?}", err),
-                        "Trader thread has panicked during execution"
-                    )
+                    error!(error = &*format!("{:?}", err), "Trader thread has panicked during execution")
                 }
             }
             notify_tx.send(true).await.unwrap();
@@ -153,10 +151,7 @@ where
         notify_rx
     }
 
-    async fn fetch_open_positions(
-        &self,
-        positions_tx: oneshot::Sender<Result<Vec<Position>, EngineError>>,
-    ) {
+    async fn fetch_open_positions(&self, positions_tx: oneshot::Sender<Result<Vec<Position>, EngineError>>) {
         let open_positions = self
             .portfolio
             .lock()
@@ -164,23 +159,16 @@ where
             .map_err(EngineError::RepositoryInteractionError);
 
         if positions_tx.send(open_positions).is_err() {
-            warn!(
-                why = "oneshot receiver dropped",
-                "can not action EngineCommand::FetchOpenPositions"
-            );
+            warn!(why = "oneshot receiver dropped", "can not action EngineCommand::FetchOpenPositions");
         }
     }
 
     async fn terminate_traders(&self, message: String) {
         self.exit_all_positions().await;
-        
+
         tokio::time::sleep(Duration::from_secs(1)).await;
         for (market, command_tx) in self.trader_command_txs.iter() {
-            if command_tx
-                .send(EngineCommand::Terminate(message.clone()))
-                .await
-                .is_err()
-            {
+            if command_tx.send(EngineCommand::Terminate(message.clone())).await.is_err() {
                 error!(
                     market = &*format!("{:?}", market),
                     why = "dropped receiver",
@@ -192,11 +180,7 @@ where
 
     async fn exit_all_positions(&self) {
         for (market, command_tx) in self.trader_command_txs.iter() {
-            if command_tx
-                .send(EngineCommand::ExitPosition(market.clone()))
-                .await
-                .is_err()
-            {
+            if command_tx.send(EngineCommand::ExitPosition(market.clone())).await.is_err() {
                 error!(
                     market = &*format!("{:?}", market),
                     why = "dropped receiver",
@@ -208,11 +192,7 @@ where
 
     async fn exit_position(&self, market: Market) {
         if let Some((market_ref, command_tx)) = self.trader_command_txs.get_key_value(&market) {
-            if command_tx
-                .send(EngineCommand::ExitPosition(market))
-                .await
-                .is_err()
-            {
+            if command_tx.send(EngineCommand::ExitPosition(market)).await.is_err() {
                 error!(
                     market = &*format!("{:?}", market_ref),
                     why = "dropped receiver",
@@ -229,27 +209,21 @@ where
     }
 
     fn generated_session_summary(mut self) -> Table {
-        let stats_per_market = self.trader_command_txs
-            .into_keys()
-            .filter_map(|market| {
-                let market_id = MarketId::from(&market);
+        let stats_per_market = self.trader_command_txs.into_keys().filter_map(|market| {
+            let market_id = MarketId::from(&market);
 
-                match self.portfolio
-                    .lock()
-                    .get_statistics(&market_id)
-                {
-                    Ok(statistic) => Some((market_id.0, statistic)),
-                    Err(err) => {
-                        error!(
-                            ?err,
-                            ?market,
-                            "failed to get Market statistics when generating trading session summary"
-                        );
-                        None
-                    }
-                }
+            match self.portfolio.lock().get_statistics(&market_id) {
+                Ok(statistic) => Some((market_id.0, statistic)),
+                Err(err) => {
+                    error!(
+                        ?err,
+                        ?market,
+                        "failed to get Market statistics when generating trading session summary"
+                    );
+                    None
+                },
             }
-        );
+        });
 
         self.portfolio
             .lock()
@@ -263,11 +237,8 @@ where
                     why = "failed to get extied Positions from Portfolio's repository",
                     "failed to generate Statistics summary for trading session"
                 );
-            }
-        );
-        
-        combine(
-            stats_per_market.chain([("Total".to_owned(), self.statistics_summary)]),
-        )
+            });
+
+        combine(stats_per_market.chain([("Total".to_owned(), self.statistics_summary)]))
     }
 }

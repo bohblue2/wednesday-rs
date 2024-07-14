@@ -1,8 +1,4 @@
-
-
-use crate::{enums::AggressorSide};
-
-
+use crate::enums::AggressorSide;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct PublicTrade {

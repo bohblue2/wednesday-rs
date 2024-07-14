@@ -1,8 +1,17 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use wednesday_model::{deserialization, enums::AggressorSide, events::{MarketEvent}, identifiers::{Exchange, ExchangeId, Identifier, SubscriptionId}, instruments::Instrument, trade::PublicTrade};
+use wednesday_model::{
+    deserialization,
+    enums::AggressorSide,
+    events::MarketEvent,
+    identifiers::{Exchange, ExchangeId, Identifier, SubscriptionId},
+    instruments::Instrument,
+    trade::PublicTrade,
+};
 
-use crate::{exchange::binance::channel::BinanceChannel, subscriber::subscription::ExchangeSubscription, transformer::iterator::MarketIter};
+use crate::{
+    exchange::binance::channel::BinanceChannel, subscriber::subscription::ExchangeSubscription, transformer::iterator::MarketIter,
+};
 
 /// Binance real-time trade message.
 ///
@@ -49,10 +58,7 @@ use crate::{exchange::binance::channel::BinanceChannel, subscriber::subscription
 pub struct BinanceSpotTrade {
     #[serde(alias = "s", deserialize_with = "de_trade_subscription_id")]
     pub subscription_id: SubscriptionId,
-    #[serde(
-        alias = "T",
-        deserialize_with = "deserialization::de_u64_epoch_ms_as_datetime_utc"
-    )]
+    #[serde(alias = "T", deserialize_with = "deserialization::de_u64_epoch_ms_as_datetime_utc")]
     pub time: DateTime<Utc>,
     #[serde(alias = "t")]
     pub id: u64,
@@ -78,7 +84,7 @@ impl From<(ExchangeId, Instrument, BinanceSpotTrade)> for MarketIter<PublicTrade
             exchange: Exchange::from(exchange_id),
             instrument,
             kind: PublicTrade {
-                id: trade.id.to_string(), 
+                id: trade.id.to_string(),
                 price: trade.price,
                 quantity: trade.amount,
                 aggressor_side: trade.side,
@@ -93,8 +99,7 @@ pub fn de_trade_subscription_id<'de, D>(deserializer: D) -> Result<SubscriptionI
 where
     D: serde::de::Deserializer<'de>,
 {
-    <&str as Deserialize>::deserialize(deserializer)
-        .map(|market| ExchangeSubscription::from((BinanceChannel::TRADES, market)).id())
+    <&str as Deserialize>::deserialize(deserializer).map(|market| ExchangeSubscription::from((BinanceChannel::TRADES, market)).id())
 }
 
 /// Deserialize a [`BinanceSpotTrade`] "buyer_is_maker" boolean field to a Barter [`Side`].
@@ -106,13 +111,15 @@ pub fn de_side_from_buyer_is_maker<'de, D>(deserializer: D) -> Result<AggressorS
 where
     D: serde::de::Deserializer<'de>,
 {
-    Deserialize::deserialize(deserializer).map(|buyer_is_maker| {
-        if buyer_is_maker {
-            AggressorSide::Sell
-        } else {
-            AggressorSide::Buy
-        }
-    })
+    Deserialize::deserialize(deserializer).map(
+        |buyer_is_maker| {
+            if buyer_is_maker {
+                AggressorSide::Sell
+            } else {
+                AggressorSide::Buy
+            }
+        },
+    )
 }
 
 #[cfg(test)]
@@ -123,8 +130,8 @@ mod tests {
         use super::*;
         use deserialization::datetime_utc_from_epoch_duration;
         use serde::de::Error;
-        use wednesday_model::error::SocketError;
         use std::time::Duration;
+        use wednesday_model::error::SocketError;
 
         #[test]
         fn test_binance_trade() {
@@ -145,9 +152,7 @@ mod tests {
                     "#,
                     expected: Ok(BinanceSpotTrade {
                         subscription_id: SubscriptionId::from("@trade|ETHUSDT"),
-                        time: datetime_utc_from_epoch_duration(Duration::from_millis(
-                            1749354825200,
-                        )),
+                        time: datetime_utc_from_epoch_duration(Duration::from_millis(1749354825200)),
                         id: 1000000000,
                         price: 10000.19,
                         amount: 0.239000,
@@ -176,9 +181,7 @@ mod tests {
                     "#,
                     expected: Ok(BinanceSpotTrade {
                         subscription_id: SubscriptionId::from("@trade|ETHUSDT"),
-                        time: datetime_utc_from_epoch_duration(Duration::from_millis(
-                            1749354825200,
-                        )),
+                        time: datetime_utc_from_epoch_duration(Duration::from_millis(1749354825200)),
                         id: 1000000000,
                         price: 10000.19,
                         amount: 0.239000,
@@ -195,9 +198,7 @@ mod tests {
                     "#,
                     expected: Ok(BinanceSpotTrade {
                         subscription_id: SubscriptionId::from("@trade|ETHUSDT"),
-                        time: datetime_utc_from_epoch_duration(Duration::from_millis(
-                            1749354825200,
-                        )),
+                        time: datetime_utc_from_epoch_duration(Duration::from_millis(1749354825200)),
                         id: 1000000000,
                         price: 10000.19,
                         amount: 0.239000,
@@ -212,9 +213,7 @@ mod tests {
                     }"#,
                     expected: Ok(BinanceSpotTrade {
                         subscription_id: SubscriptionId::from("@trade|ETHUSDT"),
-                        time: datetime_utc_from_epoch_duration(Duration::from_millis(
-                            1749354825200,
-                        )),
+                        time: datetime_utc_from_epoch_duration(Duration::from_millis(1749354825200)),
                         id: 1000000000,
                         price: 10000.19,
                         amount: 0.239000,
@@ -228,14 +227,14 @@ mod tests {
                 match (actual, test.expected) {
                     (Ok(actual), Ok(expected)) => {
                         assert_eq!(actual, expected, "TC{} failed", index)
-                    }
+                    },
                     (Err(_), Err(_)) => {
                         // Test passed
-                    }
+                    },
                     (actual, expected) => {
                         // Test failed
                         panic!("TC{index} failed because actual != expected. \nActual: {actual:?}\nExpected: {expected:?}\n");
-                    }
+                    },
                 }
             }
         }

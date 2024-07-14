@@ -4,13 +4,21 @@ use chrono::{DateTime, Utc};
 use hmac::{Hmac, Mac};
 use reqwest::{Method, RequestBuilder, StatusCode};
 use serde::{de, Deserialize, Serialize};
-use wednesday_macro::AsUrlParams;
 use serde_json::map;
 use thiserror::Error;
 use url::UrlQuery;
-use wednesday_connector::{exchange::binance::Binance, protocol::http::{parser::HttpParser, private::{encoder::HexEncoder, RequestSigner, Signer}, public::PublicNoHeaders, rest::{client::RestClient, request::RestRequest}}};
-use wednesday_model::{error::SocketError, instruments::Symbol};
 use wednesday_connector::protocol::http::rest::request::AsUrlParams;
+use wednesday_connector::{
+    exchange::binance::Binance,
+    protocol::http::{
+        parser::HttpParser,
+        private::{encoder::HexEncoder, RequestSigner, Signer},
+        public::PublicNoHeaders,
+        rest::{client::RestClient, request::RestRequest},
+    },
+};
+use wednesday_macro::AsUrlParams;
+use wednesday_model::{error::SocketError, instruments::Symbol};
 
 struct BinanceSigner {
     api_key: String,
@@ -45,24 +53,18 @@ struct BinanceSignConfig<'a> {
 //     }
 // }
 
-
-
 impl Signer for BinanceSigner {
     type Config<'a> = BinanceSignConfig<'a> where Self: 'a;
 
-    fn config<'a, Request>(
-        &'a self,
-        request: Request,
-        _: &RequestBuilder,
-    ) -> Result<Self::Config<'a>, SocketError>
+    fn config<'a, Request>(&'a self, request: Request, _: &RequestBuilder) -> Result<Self::Config<'a>, SocketError>
     where
         Request: RestRequest,
     {
-        let query_string = request.query_params()
+        let query_string = request
+            .query_params()
             .map_or(Cow::Borrowed(""), |params| Cow::Owned(params.to_url_params()));
 
-        let body_string = request.body()
-            .map_or(Cow::Borrowed(""), |body| Cow::Owned(body.to_url_params()));
+        let body_string = request.body().map_or(Cow::Borrowed(""), |body| Cow::Owned(body.to_url_params()));
 
         // let query_string = request.query_params()
         //     .map_or(String::new(), |params| params.to_url_params());
@@ -88,32 +90,24 @@ impl Signer for BinanceSigner {
         let mut param_string = String::new();
         if config.method == reqwest::Method::GET {
             param_string.push_str(config.query_params.as_ref());
-            if !config.query_params.is_empty() { param_string.push_str("&"); } 
+            if !config.query_params.is_empty() {
+                param_string.push_str("&");
+            }
             param_string.push_str(format!("recvWindow=5000&timestamp={}", config.timestamp).as_str());
         } else if config.method == Method::POST {
-            
-            
-            
         } else if config.method == Method::DELETE {
-            
-        } else if config.method == Method::PUT{
-
+        } else if config.method == Method::PUT {
         }
         println!("{:?}", param_string);
         mac.update(param_string.as_bytes());
     }
 
-    fn build_signed_request(
-        config: Self::Config<'_>,
-        builder: RequestBuilder,
-        signature: String,
-    ) -> Result<reqwest::Request, SocketError> {
+    fn build_signed_request(config: Self::Config<'_>, builder: RequestBuilder, signature: String) -> Result<reqwest::Request, SocketError> {
         // Add Ftx required Headers & build reqwest::Request
         let url = builder
             .try_clone()
             .unwrap()
-            .query(&[
-                ("signature", &signature)])
+            .query(&[("signature", &signature)])
             .build()
             .unwrap()
             .url()
@@ -123,17 +117,16 @@ impl Signer for BinanceSigner {
 
         // let mut builder = builder
         //     .header("Content-Type", "application/json")
-        
-
 
         builder
             .header("Content-Type", "application/json")
             .header("X-MBX-APIKEY", config.api_key)
             .query(&[
                 // ("recvWindow", "5000"),
-                // ("timestamp", &config.timestamp.to_string()), 
+                // ("timestamp", &config.timestamp.to_string()),
                 // ("symbol", "BNBBTC"),
-                ("signature", &signature)])
+                ("signature", &signature),
+            ])
             .build()
             .map_err(SocketError::from)
     }
@@ -153,8 +146,11 @@ impl HttpParser for BinanceParser {
 
     fn parse_api_error(&self, status: StatusCode, api_error: Self::ApiError) -> Self::OutputError {
         match api_error.code {
-            -1104 => ExecutionError::WrongParameter(format!("It is likely that the signature was 
-            included when it was not needed. Please check the API documentation: {}", api_error.msg)),
+            -1104 => ExecutionError::WrongParameter(format!(
+                "It is likely that the signature was
+            included when it was not needed. Please check the API documentation: {}",
+                api_error.msg
+            )),
             _ => ExecutionError::Socket(SocketError::HttpResponse(status, api_error.msg)),
         }
     }
@@ -185,17 +181,12 @@ struct BinanceAccountSnapshotQueryParams {
 impl AsUrlParams for BinanceAccountSnapshotQueryParams {
     fn to_url_params(&self) -> String {
         println!("{:?}", self);
-        let return_string = format!(
-            "symbol={}",
-            self.symbol
-        );
+        let return_string = format!("symbol={}", self.symbol);
         println!("{:?}", return_string);
         return_string
-        
     }
 }
 
-    
 const DEFAULT_HTTP_REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10); // Add the DEFAULT_HTTP_REQUEST_TIMEOUT constant
 
 impl RestRequest for FetchBalancesRequest {
@@ -213,7 +204,7 @@ impl RestRequest for FetchBalancesRequest {
     fn method() -> reqwest::Method {
         reqwest::Method::GET
     }
-    
+
     fn query_params(&self) -> Option<&Self::QueryParams> {
         Some(&self.inner_query_params)
     }
@@ -222,7 +213,6 @@ impl RestRequest for FetchBalancesRequest {
         Some(true)
     }
 }
-
 
 #[derive(Deserialize, Debug)]
 struct BinanceSpotAccountInfo {
@@ -263,7 +253,6 @@ fn init_logging() {
         .init()
 }
 
-
 /// See Barter-Execution for a comprehensive real-life example, as well as code you can use out of the
 /// box to execute trades on many exchanges.
 #[tokio::main]
@@ -273,7 +262,8 @@ async fn main() {
     body.push_str("{\"batchOrders\":[");
     println!("{:?}", body);
     // HMAC-SHA256 encoded account API secret used for signing private http requests
-    let mac: Hmac<sha2::Sha256> = Hmac::new_from_slice("TNJyGuIkhEC37ZBECtkR34MzIq0RkNirC6v3AwfVXxvK7ZU4zYejNykzFZNGx85D".as_bytes()).unwrap();
+    let mac: Hmac<sha2::Sha256> =
+        Hmac::new_from_slice("TNJyGuIkhEC37ZBECtkR34MzIq0RkNirC6v3AwfVXxvK7ZU4zYejNykzFZNGx85D".as_bytes()).unwrap();
 
     // Build Ftx configured RequestSigner for signing http requests with hex encoding
     let request_signer = RequestSigner::new(
@@ -285,7 +275,7 @@ async fn main() {
         HexEncoder,
     );
 
-    let request_unsigner = PublicNoHeaders{};
+    let request_unsigner = PublicNoHeaders {};
 
     // Build RestClient with Ftx configuration
     let rest_client = RestClient::new("https://testnet.binance.vision", request_signer, BinanceParser);
@@ -308,9 +298,9 @@ async fn main() {
         Ok((status, response)) => {
             println!("Response Status: {:?}", status);
             println!("Response Body: {:?}", response);
-        }
+        },
         Err(error) => {
             println!("Error: {:?}", error);
-        }
+        },
     }
 }

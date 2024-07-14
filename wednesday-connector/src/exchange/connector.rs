@@ -1,13 +1,20 @@
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use std::{fmt::Debug, time::Duration};
 use url::Url;
 use wednesday_model::{error::SocketError, identifiers::ExchangeId, instruments::Instrument};
-use std::{fmt::Debug, time::Duration};
 
-use crate::{protocol::http::websocket::{PingInterval, WsMessage}, subscriber::{subscription::{ExchangeSubscription, Map}, validator::{SubscriptionValidator, Validator}, Subscriber}};
+use crate::{
+    protocol::http::websocket::{PingInterval, WsMessage},
+    subscriber::{
+        subscription::{ExchangeSubscription, Map},
+        validator::{SubscriptionValidator, Validator},
+        Subscriber,
+    },
+};
 
 pub const DEFAULT_SUBSCRIPTION_TIMEOUT: Duration = Duration::from_secs(10);
 
-pub trait Connector 
+pub trait Connector
 where
     Self: Clone + Default + Debug + for<'de> Deserialize<'de> + Serialize + Sized,
 {
@@ -20,15 +27,19 @@ where
 
     fn url() -> Result<Url, SocketError>;
 
-    fn ping_interval() -> Option<PingInterval> { None }
+    fn ping_interval() -> Option<PingInterval> {
+        None
+    }
 
-    fn expected_responses(map: &Map<Instrument>) -> usize { map.0.len() }
+    fn expected_responses(map: &Map<Instrument>) -> usize {
+        map.0.len()
+    }
 
-    fn subscription_timeout() -> Duration { DEFAULT_SUBSCRIPTION_TIMEOUT }
+    fn subscription_timeout() -> Duration {
+        DEFAULT_SUBSCRIPTION_TIMEOUT
+    }
 
-    fn requests(
-        exchange_subscriptions: Vec<ExchangeSubscription<Self::Channel, Self::Market>>
-    ) -> Vec<WsMessage>;
+    fn requests(exchange_subscriptions: Vec<ExchangeSubscription<Self::Channel, Self::Market>>) -> Vec<WsMessage>;
 }
 
 pub trait ExchangeServer: Default + Debug + Clone + Send {

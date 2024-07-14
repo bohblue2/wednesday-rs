@@ -1,7 +1,7 @@
 pub mod multiple;
 
-use std::{collections::HashMap, pin::Pin};
 use std::fmt::Debug;
+use std::{collections::HashMap, pin::Pin};
 
 use futures::Future;
 use tracing::debug;
@@ -30,7 +30,7 @@ where
 
 impl<Kind> Debug for StreamBuilder<Kind>
 where
-    Kind: SubscriptionKind
+    Kind: SubscriptionKind,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("StreamBuilder<SubscriptionKind>")
@@ -52,11 +52,7 @@ where
     }
 
     // Note: This part is definitely needed a refactoring.
-    pub fn subscribe<
-        SubscriptionIter, 
-        SubscriptionItem, 
-        Exchange>
-    (mut self, subscriptions: SubscriptionIter) -> Self
+    pub fn subscribe<SubscriptionIter, SubscriptionItem, Exchange>(mut self, subscriptions: SubscriptionIter) -> Self
     where
         SubscriptionIter: IntoIterator<Item = SubscriptionItem>,
         SubscriptionItem: Into<Subscription<Exchange, Kind>>,
@@ -64,47 +60,40 @@ where
         Kind: Ord + Send + Sync + 'static,
         Kind::Event: Send,
         Subscription<Exchange, Kind>: Identifier<Exchange::Channel> + Identifier<Exchange::Market>,
-
     {
-        let mut subscriptions = 
-            subscriptions.into_iter()
-                .map(|subscription| subscription.into())
-                .collect::<Vec<Subscription<Exchange, Kind>>>();
+        let mut subscriptions = subscriptions
+            .into_iter()
+            .map(|subscription| subscription.into())
+            .collect::<Vec<Subscription<Exchange, Kind>>>();
 
-        let exchange_tx = self.channels
-            .entry(Exchange::ID) 
-            .or_default()
-            .tx
-            .clone();
-        
-        self.futures.push(
-            Box::pin(async move {
-                debug!("Validating subscriptions before subscribing.");
-                validate(&subscriptions)?;
-                
-                subscriptions.sort();
-                subscriptions.dedup();
+        let exchange_tx = self.channels.entry(Exchange::ID).or_default().tx.clone();
 
-                debug!("Spawning task to consume subscriptions for exchange: {:?}", Exchange::ID);
-                tokio::spawn(consume::<Exchange, Kind>(subscriptions, exchange_tx));
+        self.futures.push(Box::pin(async move {
+            debug!("Validating subscriptions before subscribing.");
+            validate(&subscriptions)?;
 
-                Ok(())
-            }));
-        
+            subscriptions.sort();
+            subscriptions.dedup();
+
+            debug!("Spawning task to consume subscriptions for exchange: {:?}", Exchange::ID);
+            tokio::spawn(consume::<Exchange, Kind>(subscriptions, exchange_tx));
+
+            Ok(())
+        }));
+
         self
     }
 
     pub async fn init(self) -> Result<Streams<MarketEvent<Kind::Event>>, DataError> {
         // Await Stream initialization perpetual and ensure success
         futures::future::join_all(self.futures).await;
-        
+
         Ok(Streams {
             streams: self
                 .channels
-                .into_iter()    
+                .into_iter()
                 .map(|(exchange_id, channel)| (exchange_id, channel.rx))
                 .collect(),
         })
     }
 }
-

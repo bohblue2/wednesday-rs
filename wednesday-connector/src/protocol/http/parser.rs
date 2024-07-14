@@ -11,11 +11,7 @@ pub trait HttpParser {
     type OutputError: From<SocketError>;
 
     /// Attempt to parse a [`StatusCode`] & bytes payload into a deserialisable `Response`.
-    fn parse<Response>(
-        &self,
-        status: StatusCode,
-        payload: &[u8],
-    ) -> Result<Response, Self::OutputError>
+    fn parse<Response>(&self, status: StatusCode, payload: &[u8]) -> Result<Response, Self::OutputError>
     where
         Response: DeserializeOwned,
     {

@@ -1,5 +1,5 @@
 use serde::Serialize;
-use wednesday_macro::{DeExchange, SerExchange, DeSubscriptionKind, SerSubscriptionKind, AsUrlParams};
+use wednesday_macro::{AsUrlParams, DeExchange, DeSubscriptionKind, SerExchange, SerSubscriptionKind};
 
 // Define a struct to test AsUrlParams
 #[derive(Serialize, AsUrlParams)]

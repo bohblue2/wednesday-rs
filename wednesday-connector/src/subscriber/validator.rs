@@ -4,9 +4,16 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use tokio_stream::StreamExt;
 use tracing::{debug, error, info};
-use wednesday_model::{error::{DataError, SocketError}, instruments::Instrument};
+use wednesday_model::{
+    error::{DataError, SocketError},
+    instruments::Instrument,
+};
 
-use crate::{exchange::connector::Connector, protocol::http::websocket::{WsClient, WsParser}, stream::{parser::StreamParser, selector::StreamSelector}};
+use crate::{
+    exchange::connector::Connector,
+    protocol::http::websocket::{WsClient, WsParser},
+    stream::{parser::StreamParser, selector::StreamSelector},
+};
 
 use super::subscription::{Map, Subscription, SubscriptionKind};
 
@@ -22,16 +29,17 @@ where
     Kind: SubscriptionKind,
 {
     fn validate(self) -> Result<Self, SocketError>
-        where
-            Self: Sized {
+    where
+        Self: Sized,
+    {
         let exchange_id = Exchange::ID;
 
         if exchange_id.supports(self.instrument.kind) {
             Ok(self)
         } else {
-            Err(SocketError::Unsupported { 
-                entity: exchange_id.as_str(), 
-                item: self.instrument.kind.to_string() 
+            Err(SocketError::Unsupported {
+                entity: exchange_id.as_str(),
+                item: self.instrument.kind.to_string(),
             })
         }
     }
@@ -43,10 +51,7 @@ where
 pub trait SubscriptionValidator {
     type Parser: StreamParser;
 
-    async fn validate<Exchange, Kind>(
-        instrument_map: Map<Instrument>,
-        ws_client: &mut WsClient,
-    ) -> Result<Map<Instrument>, SocketError>
+    async fn validate<Exchange, Kind>(instrument_map: Map<Instrument>, ws_client: &mut WsClient) -> Result<Map<Instrument>, SocketError>
     where
         Exchange: Connector + Send,
         Kind: SubscriptionKind + Send;
@@ -56,12 +61,10 @@ pub trait SubscriptionValidator {
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Deserialize, Serialize)]
 pub struct WsSubscriptionValidator;
 
-pub fn validate<Exchange, Kind>(
-    subscriptions: &[Subscription<Exchange, Kind>],
-) -> Result<(), DataError>
+pub fn validate<Exchange, Kind>(subscriptions: &[Subscription<Exchange, Kind>]) -> Result<(), DataError>
 where
     Exchange: StreamSelector<Kind>,
-    Kind: SubscriptionKind
+    Kind: SubscriptionKind,
 {
     if subscriptions.is_empty() {
         return Err(DataError::Socket(SocketError::Subscribe(
@@ -73,19 +76,16 @@ where
         .iter()
         .map(|subscription| subscription.validate())
         .collect::<Result<Vec<_>, SocketError>>()?;
-    
+
     Ok(())
 }
 
-/// 
+///
 #[async_trait]
 impl SubscriptionValidator for WsSubscriptionValidator {
     type Parser = WsParser;
 
-    async fn validate<Exchange, Kind>(
-        instrument_map: Map<Instrument>,
-        ws_client: &mut WsClient,
-    ) -> Result<Map<Instrument>, SocketError>
+    async fn validate<Exchange, Kind>(instrument_map: Map<Instrument>, ws_client: &mut WsClient) -> Result<Map<Instrument>, SocketError>
     where
         Exchange: Connector + Send,
         Kind: SubscriptionKind + Send,
@@ -133,7 +133,7 @@ impl SubscriptionValidator for WsSubscriptionValidator {
                             }
 
                             // Subscription failure
-                            Err(err) => { 
+                            Err(err) => {
                                 error!(exchange = %Exchange::ID, %err, "received invalid subscription response");
                                 break Err(err)
                             }
@@ -147,7 +147,7 @@ impl SubscriptionValidator for WsSubscriptionValidator {
                                 %success_responses,
                                 %expected_responses,
                                 %payload,
-                                "failed to deserialize non SubResponse payload" 
+                                "failed to deserialize non SubResponse payload"
                             );
                             // Continue processing to handle potential late subscription messages
                             continue;

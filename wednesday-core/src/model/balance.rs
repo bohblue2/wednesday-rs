@@ -19,7 +19,6 @@ impl Default for Balance {
     }
 }
 
-
 pub type BalanceId = String;
 
 impl Balance {

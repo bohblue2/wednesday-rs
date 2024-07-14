@@ -3,13 +3,12 @@ extern crate proc_macro;
 use convert_case::{Boundary, Case, Casing};
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{DeriveInput, parse_macro_input};
+use syn::{parse_macro_input, DeriveInput};
 
 #[proc_macro_derive(DeExchange)]
 pub fn de_exchange_derive(input: TokenStream) -> TokenStream {
     // Parse Rust code abstract syntax tree with Syn from TokenStream -> DeriveInput
-    let ast: DeriveInput =
-        syn::parse(input).expect("de_exchange_derive() failed to parse input TokenStream");
+    let ast: DeriveInput = syn::parse(input).expect("de_exchange_derive() failed to parse input TokenStream");
 
     // Determine exchange name
     let exchange = &ast.ident;
@@ -41,8 +40,7 @@ pub fn de_exchange_derive(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(SerExchange)]
 pub fn ser_exchange_derive(input: TokenStream) -> TokenStream {
     // Parse Rust code abstract syntax tree with Syn from TokenStream -> DeriveInput
-    let ast: DeriveInput =
-        syn::parse(input).expect("ser_exchange_derive() failed to parse input TokenStream");
+    let ast: DeriveInput = syn::parse(input).expect("ser_exchange_derive() failed to parse input TokenStream");
 
     // Determine Exchange
     let exchange = &ast.ident;
@@ -65,8 +63,7 @@ pub fn ser_exchange_derive(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(DeSubscriptionKind)]
 pub fn de_subscription_kind_derive(input: TokenStream) -> TokenStream {
     // Parse Rust code abstract syntax tree with Syn from TokenStream -> DeriveInput
-    let ast: DeriveInput =
-        syn::parse(input).expect("de_sub_kind_derive() failed to parse input TokenStream");
+    let ast: DeriveInput = syn::parse(input).expect("de_sub_kind_derive() failed to parse input TokenStream");
 
     // Determine SubKind name
     let sub_kind = &ast.ident;
@@ -103,8 +100,7 @@ pub fn de_subscription_kind_derive(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(SerSubscriptionKind)]
 pub fn ser_subscription_kind_derive(input: TokenStream) -> TokenStream {
     // Parse Rust code abstract syntax tree with Syn from TokenStream -> DeriveInput
-    let ast: DeriveInput =
-        syn::parse(input).expect("ser_sub_kind_derive() failed to parse input TokenStream");
+    let ast: DeriveInput = syn::parse(input).expect("ser_sub_kind_derive() failed to parse input TokenStream");
 
     // Determine SubKind name
     let sub_kind = &ast.ident;
@@ -129,7 +125,7 @@ pub fn ser_subscription_kind_derive(input: TokenStream) -> TokenStream {
 // pub fn derive_as_string(input: TokenStream) -> TokenStream {
 //     // Parse the input tokens into a syntax tree
 //     let input = parse_macro_input!(input as DeriveInput);
-    
+
 //     // Get the struct name
 //     let name = &input.ident;
 
@@ -147,7 +143,7 @@ pub fn ser_subscription_kind_derive(input: TokenStream) -> TokenStream {
 //         impl #name {
 //             pub fn to_url_params(&self) -> String {
 //                 let mut params = Vec::new();
-                
+
 //                 // Use serde_json to convert struct fields to key-value pairs
 //                 let json_string = serde_json::to_string(&self).expect("Failed to serialize struct");
 //                 let json_value: serde_json::Value = serde_json::from_str(&json_string).expect("Failed to parse JSON");
@@ -168,7 +164,7 @@ pub fn ser_subscription_kind_derive(input: TokenStream) -> TokenStream {
 //                         }
 //                     }
 //                 }
-                
+
 //                 params.join("&")
 //             }
 //         }
@@ -185,12 +181,13 @@ pub fn ser_subscription_kind_derive(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(AsUrlParams)]
 pub fn derive_as_string(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    
+
     let name = &input.ident;
     let fields = if let syn::Data::Struct(data) = &input.data {
-        data.fields.iter().filter_map(|f| {
-            f.ident.as_ref().map(|ident| ident.to_string())
-        }).collect::<Vec<_>>()
+        data.fields
+            .iter()
+            .filter_map(|f| f.ident.as_ref().map(|ident| ident.to_string()))
+            .collect::<Vec<_>>()
     } else {
         panic!("AsUrlParams can only be derived for structs");
     };
@@ -199,7 +196,7 @@ pub fn derive_as_string(input: TokenStream) -> TokenStream {
         impl #name {
             pub fn to_url_params(&self) -> String {
                 let mut params = Vec::new();
-                
+
                 let json_value = serde_json::json!(self);
                 if let serde_json::Value::Object(map) = json_value {
                     let ordered_keys = vec![#(#fields),*];
@@ -215,7 +212,7 @@ pub fn derive_as_string(input: TokenStream) -> TokenStream {
                         }
                     }
                 }
-                
+
                 params.join("&")
             }
         }

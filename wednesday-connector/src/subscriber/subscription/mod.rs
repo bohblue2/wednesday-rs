@@ -1,14 +1,14 @@
 pub mod kind;
-use std::fmt::{self, Display, Debug};
-use std::{collections::HashMap};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fmt::{self, Debug, Display};
 use wednesday_model::error::SocketError;
 use wednesday_model::identifiers::{Identifier, SubscriptionId};
 use wednesday_model::instruments::{Instrument, InstrumentKind};
 
 use crate::protocol::http::websocket::WsMessage;
 
-pub trait SubscriptionKind 
+pub trait SubscriptionKind
 where
     Self: Debug + Clone,
 {
@@ -34,14 +34,11 @@ where
     }
 }
 
-impl<Exchange, S, Kind> From<(Exchange, S, S, InstrumentKind, Kind)> 
-    for Subscription<Exchange, Kind>
+impl<Exchange, S, Kind> From<(Exchange, S, S, InstrumentKind, Kind)> for Subscription<Exchange, Kind>
 where
     S: Into<String>,
 {
-    fn from(
-        (exchange, base_currency, quote_currency, instrument_kind, kind): (Exchange, S, S, InstrumentKind, Kind),
-    ) -> Self {
+    fn from((exchange, base_currency, quote_currency, instrument_kind, kind): (Exchange, S, S, InstrumentKind, Kind)) -> Self {
         Self::new(exchange, (base_currency, quote_currency, instrument_kind), kind)
     }
 }
@@ -62,24 +59,20 @@ impl<Exchange, Kind> Subscription<Exchange, Kind> {
 #[derive(Debug, PartialEq, Eq, Ord, PartialOrd, Hash, Deserialize)]
 pub struct ExchangeSubscription<Channel, Market> {
     pub channel: Channel,
-    pub market: Market
+    pub market: Market,
 }
 
-impl<Channel, Market> Identifier<SubscriptionId> for ExchangeSubscription<Channel, Market> 
+impl<Channel, Market> Identifier<SubscriptionId> for ExchangeSubscription<Channel, Market>
 where
     Channel: AsRef<str>,
     Market: AsRef<str>,
 {
     fn id(&self) -> SubscriptionId {
-        SubscriptionId::from(format!(
-            "{}|{}",
-            self.channel.as_ref(),
-            self.market.as_ref()
-        ))
+        SubscriptionId::from(format!("{}|{}", self.channel.as_ref(), self.market.as_ref()))
     }
 }
 
-impl<Channel, Market> ExchangeSubscription<Channel, Market> 
+impl<Channel, Market> ExchangeSubscription<Channel, Market>
 where
     Channel: AsRef<str>,
     Market: AsRef<str>,
@@ -105,11 +98,10 @@ where
     }
 }
 
-
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct SubscriptionMeta {
     pub instrument_map: Map<Instrument>,
-    pub subscriptions: Vec<WsMessage>
+    pub subscriptions: Vec<WsMessage>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -127,19 +119,14 @@ impl<T> FromIterator<(SubscriptionId, T)> for Map<T> {
 impl<T> Map<T> {
     /// Find the `T` associated with the provided [`SubscriptionId`].
     pub fn find(&self, id: &SubscriptionId) -> Result<T, SocketError>
-    where 
+    where
         T: Clone,
     {
-        self.0
-            .get(id)
-            .cloned()
-            .ok_or_else(|| SocketError::Unidentifiable((id.clone())))
+        self.0.get(id).cloned().ok_or_else(|| SocketError::Unidentifiable(id.clone()))
     }
-    
+
     /// Find the mutable reference to `T` associated with the provided [`SubscriptionId`].
     pub fn find_mut(&mut self, id: &SubscriptionId) -> Result<&mut T, SocketError> {
-        self.0
-            .get_mut(id)
-            .ok_or_else(|| SocketError::Unidentifiable(id.clone()))
+        self.0.get_mut(id).ok_or_else(|| SocketError::Unidentifiable(id.clone()))
     }
 }

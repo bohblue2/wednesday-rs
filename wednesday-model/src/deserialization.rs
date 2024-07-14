@@ -1,7 +1,5 @@
 /// Determine the `DateTime<Utc>` from the provided `Duration` since the epoch.
-pub fn datetime_utc_from_epoch_duration(
-    duration: std::time::Duration,
-) -> chrono::DateTime<chrono::Utc> {
+pub fn datetime_utc_from_epoch_duration(duration: std::time::Duration) -> chrono::DateTime<chrono::Utc> {
     chrono::DateTime::<chrono::Utc>::from(std::time::UNIX_EPOCH + duration)
 }
 
@@ -17,13 +15,10 @@ where
 }
 
 /// Deserialize a `u64` milliseconds value as `DateTime<Utc>`.
-pub fn de_u64_epoch_ms_as_datetime_utc<'de, D>(
-    deserializer: D,
-) -> Result<chrono::DateTime<chrono::Utc>, D::Error>
+pub fn de_u64_epoch_ms_as_datetime_utc<'de, D>(deserializer: D) -> Result<chrono::DateTime<chrono::Utc>, D::Error>
 where
     D: serde::de::Deserializer<'de>,
 {
-    serde::de::Deserialize::deserialize(deserializer).map(|epoch_ms| {
-        datetime_utc_from_epoch_duration(std::time::Duration::from_millis(epoch_ms))
-    })
+    serde::de::Deserialize::deserialize(deserializer)
+        .map(|epoch_ms| datetime_utc_from_epoch_duration(std::time::Duration::from_millis(epoch_ms)))
 }

@@ -41,11 +41,11 @@ impl PositionSummariser for EquityPoint {
                 // Position is not exited, so simulate
                 self.time = position.meta.update_timestamp;
                 self.total += position.unrealised_profit_loss;
-            }
+            },
             Some(exit_balance) => {
                 self.time = exit_balance.timestamp;
                 self.total += position.realised_profit_loss;
-            }
+            },
         }
     }
 }

@@ -3,7 +3,6 @@ use wednesday_model::enums::OrderType;
 
 use crate::model::order_event::OrderEvent;
 
-
 /// Evaluates the risk associated with an [`OrderEvent`] to determine if it should be actioned. It
 /// can also amend the order (eg/ [`OrderType`]) to better fit the risk strategy required for
 /// profitability.

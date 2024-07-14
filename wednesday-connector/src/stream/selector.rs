@@ -2,7 +2,7 @@ use crate::{exchange::connector::Connector, subscriber::subscription::Subscripti
 
 use super::market::MarketStream;
 
-pub trait StreamSelector<Kind> 
+pub trait StreamSelector<Kind>
 where
     Self: Connector,
     Kind: SubscriptionKind,

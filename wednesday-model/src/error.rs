@@ -5,24 +5,16 @@ use crate::identifiers::SubscriptionId;
 
 pub type Packet = u8;
 
-
-
 #[derive(Error, Debug)]
 pub enum SocketError {
     #[error("Sink Error")]
     Sink,
 
     #[error("Deserializing JSON error: {error} for payload: {payload}")]
-    DeserializingJson { 
-        error: String, 
-        payload: String 
-    },
+    DeserializingJson { error: String, payload: String },
 
     #[error("Deserializing Binary error: {error} for payload: {payload:?}")]
-    DeserializingBinary { 
-        error: serde_json::Error,
-        payload: Vec<u8> 
-    },
+    DeserializingBinary { error: serde_json::Error, payload: Vec<u8> },
 
     #[error("Error unwrapping value: {0}")]
     UnwrapError(String),
@@ -79,7 +71,7 @@ impl From<reqwest::Error> for SocketError {
 
 #[derive(Error, Debug, Clone)]
 pub enum ParserError {
-    #[error("fail to parse packet: data({0})")] 
+    #[error("fail to parse packet: data({0})")]
     PacketParse(Packet),
 
     #[error("invalid aggressor side: {0}")]
@@ -95,19 +87,13 @@ pub enum DataError {
         "InvalidSequence: first_update_id {first_update_id} does not follow on from the \
         prev_last_update_id {prev_last_update_id}"
     )]
-    InvalidSequence {
-        prev_last_update_id: u64,
-        first_update_id: u64,
-    }
+    InvalidSequence { prev_last_update_id: u64, first_update_id: u64 },
 }
 
 impl DataError {
     /// Determine if an error requires a [`MarketStream`](super::MarketStream) to re-initialise.
     pub fn is_terminal(&self) -> bool {
-        match self {
-            DataError::InvalidSequence { .. } => true,
-            _ => false,
-        }
+        matches!(self, DataError::InvalidSequence { .. })
     }
 }
 

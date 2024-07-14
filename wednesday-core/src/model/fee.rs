@@ -2,7 +2,6 @@ use serde::{Deserialize, Serialize};
 
 pub type FeeAmount = f64;
 
-
 #[derive(Copy, Debug, PartialOrd, PartialEq, Clone, Serialize, Deserialize)]
 pub struct Fees {
     pub exchange: FeeAmount,

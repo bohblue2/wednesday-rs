@@ -1,11 +1,12 @@
 use crate::statistic::{
-    algorithm::welford_online, converter::{de_duration_from_secs, se_duration_as_secs}, dispersion::Range
+    algorithm::welford_online,
+    converter::{de_duration_from_secs, se_duration_as_secs},
+    dispersion::Range,
 };
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::EquityPoint;
-
 
 /// [`Drawdown`] is the peak-to-trough decline of the Portfolio, or investment, during a specific
 /// period. Drawdown is a measure of downside volatility.
@@ -16,10 +17,7 @@ pub struct Drawdown {
     pub equity_range: Range,
     pub drawdown: f64,
     pub start_time: DateTime<Utc>,
-    #[serde(
-        deserialize_with = "de_duration_from_secs",
-        serialize_with = "se_duration_as_secs"
-    )]
+    #[serde(deserialize_with = "de_duration_from_secs", serialize_with = "se_duration_as_secs")]
     pub duration: Duration,
 }
 
@@ -53,15 +51,12 @@ impl Drawdown {
     /// period has ended (investment recovers from a trough back above the previous peak), the
     /// function return Some(Drawdown), else None is returned.
     pub fn update(&mut self, current: EquityPoint) -> Option<Drawdown> {
-        match (
-            self.is_waiting_for_peak(),
-            current.total > self.equity_range.high,
-        ) {
+        match (self.is_waiting_for_peak(), current.total > self.equity_range.high) {
             // A) No current drawdown - waiting for next equity peak (waiting for B)
             (true, true) => {
                 self.equity_range.high = current.total;
                 None
-            }
+            },
 
             // B) Start of new drawdown - previous equity point set peak & current equity lower
             (true, false) => {
@@ -69,7 +64,7 @@ impl Drawdown {
                 self.equity_range.low = current.total;
                 self.drawdown = self.calculate();
                 None
-            }
+            },
 
             // C) Continuation of drawdown - equity lower than most recent peak
             (false, false) => {
@@ -77,7 +72,7 @@ impl Drawdown {
                 self.equity_range.update(current.total);
                 self.drawdown = self.calculate(); // I don't need to calculate this now if I don't want
                 None
-            }
+            },
 
             // D) End of drawdown - equity has reached new peak (enters A)
             (false, true) => {
@@ -97,7 +92,7 @@ impl Drawdown {
                 self.equity_range.high = current.total;
 
                 Some(finished_drawdown)
-            }
+            },
         }
     }
 
@@ -148,10 +143,7 @@ impl MaxDrawdown {
 pub struct AvgDrawdown {
     pub count: u64,
     pub mean_drawdown: f64,
-    #[serde(
-        deserialize_with = "de_duration_from_secs",
-        serialize_with = "se_duration_as_secs"
-    )]
+    #[serde(deserialize_with = "de_duration_from_secs", serialize_with = "se_duration_as_secs")]
     pub mean_duration: Duration,
     pub mean_duration_milliseconds: i64,
 }
@@ -178,11 +170,7 @@ impl AvgDrawdown {
     pub fn update(&mut self, drawdown: &Drawdown) {
         self.count += 1;
 
-        self.mean_drawdown = welford_online::calculate_mean(
-            self.mean_drawdown,
-            drawdown.drawdown,
-            self.count as f64,
-        );
+        self.mean_drawdown = welford_online::calculate_mean(self.mean_drawdown, drawdown.drawdown, self.count as f64);
 
         self.mean_duration_milliseconds = welford_online::calculate_mean(
             self.mean_duration_milliseconds,
@@ -490,11 +478,7 @@ mod tests {
 
         for (index, test) in test_cases.into_iter().enumerate() {
             max_drawdown.update(&test.input_drawdown);
-            assert_eq!(
-                max_drawdown.drawdown, test.expected_drawdown,
-                "Test case: {:?}",
-                index
-            )
+            assert_eq!(max_drawdown.drawdown, test.expected_drawdown, "Test case: {:?}", index)
         }
     }
 
@@ -571,11 +555,7 @@ mod tests {
 
         for (index, test) in test_cases.into_iter().enumerate() {
             avg_drawdown.update(&test.input_drawdown);
-            assert_eq!(
-                avg_drawdown, test.expected_avg_drawdown,
-                "Test case: {:?}",
-                index
-            )
+            assert_eq!(avg_drawdown, test.expected_avg_drawdown, "Test case: {:?}", index)
         }
     }
 }

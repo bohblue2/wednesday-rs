@@ -1,9 +1,6 @@
-
-
 use std::fmt::{self, Display};
 
 use serde::{Deserialize, Serialize};
-
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 pub enum AggressorSide {

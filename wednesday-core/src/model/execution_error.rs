@@ -1,4 +1,3 @@
-
 use thiserror::Error;
 
 /// All errors generated in the barter::execution module.

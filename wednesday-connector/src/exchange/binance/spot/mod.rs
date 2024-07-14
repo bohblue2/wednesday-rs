@@ -1,7 +1,11 @@
-
 use wednesday_model::identifiers::ExchangeId;
 
-use crate::{exchange::connector::ExchangeServer, stream::{protocol::websocket::ExchangeWsStream, selector::StreamSelector}, subscriber::subscription::kind::OrderBooksL2, transformer::stateful::MultiBookTransformer};
+use crate::{
+    exchange::connector::ExchangeServer,
+    stream::{protocol::websocket::ExchangeWsStream, selector::StreamSelector},
+    subscriber::subscription::kind::OrderBooksL2,
+    transformer::stateful::MultiBookTransformer,
+};
 
 use self::l2::BinanceSpotBookUpdater;
 
@@ -20,7 +24,7 @@ pub struct BinanceServerSpot;
 // 여기에 order execution 관련 코드 추가
 impl ExchangeServer for BinanceServerSpot {
     const ID: ExchangeId = ExchangeId::BinanceSpot;
-    
+
     fn ws_url() -> &'static str {
         WEBSOCKET_BASE_URL_BINANCE_SPOT
     }
@@ -29,4 +33,3 @@ impl ExchangeServer for BinanceServerSpot {
 impl StreamSelector<OrderBooksL2> for BinanceSpot {
     type Stream = ExchangeWsStream<MultiBookTransformer<Self, OrderBooksL2, BinanceSpotBookUpdater>>;
 }
-

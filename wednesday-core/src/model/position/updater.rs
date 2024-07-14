@@ -6,7 +6,7 @@ use super::{Position, PositionId};
 
 #[derive(Clone, PartialEq, PartialOrd, Debug, Deserialize, Serialize)]
 pub struct PositionUpdate {
-    pub position_id: PositionId,    
+    pub position_id: PositionId,
     pub update_timestamp: DateTime<Utc>,
     pub current_symbol_price: f64,
     pub current_value_gross: f64,
@@ -32,7 +32,6 @@ pub trait PositionUpdater {
     fn update(&mut self, market: &MarketEvent<DataKind>) -> Option<PositionUpdate>;
 }
 
-
 impl PositionUpdater for Position {
     fn update(&mut self, market: &MarketEvent<DataKind>) -> Option<PositionUpdate> {
         // Determine close from MarketEvent
@@ -40,7 +39,7 @@ impl PositionUpdater for Position {
             DataKind::PublicTrade(trade) => trade.price,
             DataKind::OrderBookL1(book_l1) => book_l1.volume_weighed_mid_price(),
             DataKind::Bar(bar) => bar.close,
-            _ => return None
+            _ => return None,
         };
 
         self.meta.update_timestamp = market.exchange_ts;

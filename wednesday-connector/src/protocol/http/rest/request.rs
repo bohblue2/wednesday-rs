@@ -13,7 +13,9 @@ pub trait AsUrlParams {
 }
 
 impl AsUrlParams for () {
-    fn to_url_params(&self) -> String { String::new() }
+    fn to_url_params(&self) -> String {
+        String::new()
+    }
 }
 
 /// Http REST request that can be executed by a [`RestClient`](self::client::RestClient).
@@ -51,6 +53,6 @@ pub trait RestRequest {
     }
 
     fn sign_required() -> Option<bool> {
-        None 
+        None
     }
 }

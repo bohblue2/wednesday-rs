@@ -36,15 +36,51 @@ pub struct FillEventBuilder {
 }
 
 impl FillEventBuilder {
-    pub fn new() -> Self { Self::default() }
-    pub fn time(self, value: DateTime<Utc>) -> Self { Self { time: Some(value), ..self } }
-    pub fn exchange(self, value: Exchange) -> Self { Self { exchange: Some(value), ..self } }
-    pub fn instrument(self, value: Instrument) -> Self { Self { instrument: Some(value), ..self } }
-    pub fn market_meta(self, value: MarketMeta) -> Self { Self { market_meta: Some(value), ..self } }
-    pub fn decision(self, value: Decision) -> Self { Self { decision: Some(value), ..self } }
-    pub fn quantity(self, value: f64) -> Self { Self { quantity: Some(value), ..self } }
-    pub fn fill_value_gross(self, value: f64) -> Self { Self { fill_value_gross: Some(value), ..self } }
-    pub fn fees(self, value: Fees) -> Self { Self { fees: Some(value), ..self } }
+    pub fn new() -> Self {
+        Self::default()
+    }
+    pub fn time(self, value: DateTime<Utc>) -> Self {
+        Self { time: Some(value), ..self }
+    }
+    pub fn exchange(self, value: Exchange) -> Self {
+        Self {
+            exchange: Some(value),
+            ..self
+        }
+    }
+    pub fn instrument(self, value: Instrument) -> Self {
+        Self {
+            instrument: Some(value),
+            ..self
+        }
+    }
+    pub fn market_meta(self, value: MarketMeta) -> Self {
+        Self {
+            market_meta: Some(value),
+            ..self
+        }
+    }
+    pub fn decision(self, value: Decision) -> Self {
+        Self {
+            decision: Some(value),
+            ..self
+        }
+    }
+    pub fn quantity(self, value: f64) -> Self {
+        Self {
+            quantity: Some(value),
+            ..self
+        }
+    }
+    pub fn fill_value_gross(self, value: f64) -> Self {
+        Self {
+            fill_value_gross: Some(value),
+            ..self
+        }
+    }
+    pub fn fees(self, value: Fees) -> Self {
+        Self { fees: Some(value), ..self }
+    }
 
     pub fn build(self) -> Result<FillEvent, ExecutionError> {
         let timestamp = self.time.ok_or(ExecutionError::BuilderIncomplete("time"))?;

@@ -10,4 +10,3 @@ pub enum EngineCommand {
     ExitAllPositions,
     ExitPosition(Market),
 }
-

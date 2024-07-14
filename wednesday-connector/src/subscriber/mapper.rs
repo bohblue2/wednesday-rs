@@ -7,8 +7,6 @@ use crate::exchange::connector::Connector;
 
 use super::subscription::{ExchangeSubscription, Map, Subscription, SubscriptionKind, SubscriptionMeta};
 
-
-
 /// Defines how to map a collection of Barter [`Subscription`]s into exchange specific
 /// [`SubscriptionMeta`], containing subscription payloads that are sent to the exchange.
 pub trait SubscriptionMapper {
@@ -41,14 +39,12 @@ impl SubscriptionMapper for WsSubscriptionMapper {
                 // Determine the SubscriptionId associated with this exchange specific subscription
                 let subscription_id = exchange_subscription.id();
 
-                instrument_map
-                    .0
-                    .insert(subscription_id, subscription.instrument.clone());
+                instrument_map.0.insert(subscription_id, subscription.instrument.clone());
 
                 exchange_subscription
             })
             .collect::<Vec<ExchangeSubscription<Exchange::Channel, Exchange::Market>>>();
-        
+
         let subscriptions = Exchange::requests(exchange_subscriptions);
 
         SubscriptionMeta {
