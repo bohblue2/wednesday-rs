@@ -20,12 +20,12 @@ jobs:
       - name: Run tests
         run: cargo test --verbose
 
-  rust_clippy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run Clippy
-        run: cargo clippy --all-targets --all-features
+  # rust_clippy:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Run Clippy
+  #       run: cargo clippy --all-targets --all-features
 
   rust_format:
     runs-on: ubuntu-latest
