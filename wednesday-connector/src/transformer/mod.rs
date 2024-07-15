@@ -7,6 +7,7 @@ use async_trait::async_trait;
 use serde::Deserialize;
 use tokio::sync::mpsc;
 use wednesday_model::{error::DataError, events::MarketEvent, instruments::Instrument};
+use std::fmt::Debug;
 
 use crate::{
     protocol::http::websocket::WsMessage,
@@ -15,7 +16,7 @@ use crate::{
 
 pub trait Transformer {
     type Error;
-    type Input: for<'de> Deserialize<'de>;
+    type Input: for<'de> Deserialize<'de> + Debug;
     type Output;
     type OutputIter: IntoIterator<Item = Result<Self::Output, Self::Error>>;
     type Pong: for<'de> Deserialize<'de>;

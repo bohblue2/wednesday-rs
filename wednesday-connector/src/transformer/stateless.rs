@@ -31,7 +31,7 @@ impl<Exchange, Kind, Input> ExchangeTransformer<Exchange, Kind> for StatelessTra
 where
     Exchange: Connector + Send,
     Kind: SubscriptionKind + Send,
-    Input: Identifier<Option<SubscriptionId>> + for<'de> Deserialize<'de>,
+    Input: Identifier<Option<SubscriptionId>> + for<'de> Deserialize<'de> + Debug,
     MarketIter<Kind::Event>: From<(ExchangeId, Instrument, Input)>,
 {
     async fn new(_: mpsc::UnboundedSender<WsMessage>, instrument_map: Map<Instrument>) -> Result<Self, DataError> {
@@ -48,7 +48,7 @@ impl<Exchange, Kind, Input> Transformer for StatelessTransformer<Exchange, Kind,
 where
     Exchange: Connector,
     Kind: SubscriptionKind,
-    Input: Identifier<Option<SubscriptionId>> + for<'de> Deserialize<'de>,
+    Input: Identifier<Option<SubscriptionId>> + for<'de> Deserialize<'de> + Debug,
     MarketIter<Kind::Event>: From<(ExchangeId, Instrument, Input)>,
 {
     type Error = DataError;
@@ -79,7 +79,7 @@ impl<Exchange, Kind, Input, Pong> Transformer for StatelessTransformerWithPong<E
 where
     Exchange: Connector,
     Kind: SubscriptionKind,
-    Input: Identifier<Option<SubscriptionId>> + for<'de> Deserialize<'de>,
+    Input: Identifier<Option<SubscriptionId>> + for<'de> Deserialize<'de> + Debug,
     MarketIter<Kind::Event>: From<(ExchangeId, Instrument, Input)>,
     Pong: for<'de> Deserialize<'de> + Debug,
 {
@@ -99,7 +99,7 @@ impl<Exchange, Kind, Input, Pong> ExchangeTransformer<Exchange, Kind> for Statel
 where
     Exchange: Connector + Send,
     Kind: SubscriptionKind + Send,
-    Input: Identifier<Option<SubscriptionId>> + for<'de> Deserialize<'de>,
+    Input: Identifier<Option<SubscriptionId>> + for<'de> Deserialize<'de> + Debug,
     MarketIter<Kind::Event>: From<(ExchangeId, Instrument, Input)>,
     Pong: for<'de> Deserialize<'de> + Send + Debug,
 {
