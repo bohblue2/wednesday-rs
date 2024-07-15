@@ -2,7 +2,7 @@ use core::fmt::Debug;
 use std::marker::PhantomData;
 
 use crate::protocol::http::websocket::{PingInterval, WsMessage};
-use crate::stream::protocol::websocket::ExchangeWsStream;
+use crate::stream::protocol::ws_stream::ExchangeWsStream;
 use crate::stream::selector::StreamSelector;
 use crate::subscriber::protocol::websocket::WsSubscriber;
 use crate::subscriber::subscription::kind::PublicTrades;

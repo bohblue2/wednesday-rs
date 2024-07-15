@@ -1,4 +1,5 @@
 pub mod kind;
+pub mod private;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::{self, Debug, Display};

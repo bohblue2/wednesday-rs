@@ -7,7 +7,7 @@ use wednesday_model::{error::SocketError, identifiers::ExchangeId, instruments::
 
 use crate::{
     protocol::http::websocket::{PingInterval, WsMessage},
-    stream::{protocol::websocket::ExchangeWsStream, selector::StreamSelector},
+    stream::{protocol::ws_stream::ExchangeWsStream, selector::StreamSelector},
     subscriber::{
         protocol::websocket::WsSubscriber,
         subscription::{

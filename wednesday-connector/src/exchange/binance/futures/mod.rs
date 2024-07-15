@@ -2,7 +2,7 @@ use wednesday_model::identifiers::ExchangeId;
 
 use crate::{
     exchange::connector::ExchangeServer,
-    stream::{protocol::websocket::ExchangeWsStream, selector::StreamSelector},
+    stream::{protocol::ws_stream::ExchangeWsStream, selector::StreamSelector},
     subscriber::subscription::kind::OrderBooksL2,
     transformer::stateful::MultiBookTransformer,
 };
