@@ -60,7 +60,10 @@ where
     fn transform(&mut self, input: Self::Input) -> Self::OutputIter {
         let subscription_id = match input.id() {
             Some(subscription_id) => subscription_id,
-            None => return vec![],
+            None => {
+                debug!(?input, "No subscription ID found in input, returning empty MarketEvent iterator");
+                return vec![]
+            }
         };
 
         match self.instrument_map.find(&subscription_id) {

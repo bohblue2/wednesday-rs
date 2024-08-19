@@ -61,6 +61,7 @@ where
                     // KOSCOM 이나 다른 국내 증권사 WS API 를 사용할 때는 이 부분이 필요가 없을 수도 있음.
                     // ExchangeWsStream 이나 Protocol::parse layer 에서 처리하는게 맞는데 이쪽 레이어에서 처리하게함. 일단 보이는게 여기밖에 없었음.
                     // {"timestamp":"2024-07-14T16:32:31.797854Z","level":"DEBUG","fields":{"message":"failed to deserialize WebSocket Message into domain specific Message","error":"Error(\"missing field `subscription_id`\", line: 1, column: 106)","payload":"\"{\\\"success\\\":true,\\\"ret_msg\\\":\\\"pong\\\",\\\"conn_id\\\":\\\"81d5da61-f4c2-482a-95b6-8ac4f60eded3\\\",\\\"req_id\\\":\\\"\\\",\\\"op\\\":\\\"ping\\\"}\"","action":"returning Some(Err(err))"},"target":"wednesday_connector::protocol::http::websocket"}
+                    panic!("Error: {:?}", err);
 
 
                     let _message = match Protocol::parse::<StreamTransformer::Pong>(Rc::clone(&input)) {

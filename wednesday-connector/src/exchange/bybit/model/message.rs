@@ -3,20 +3,69 @@ use serde::{
     de::{Error, Unexpected},
     Deserialize, Serialize,
 };
+use tracing::debug;
 use wednesday_model::{
-    deserialization,
-    identifiers::{Identifier, SubscriptionId},
+    deserialization, events::MarketEvent, identifiers::{Exchange, ExchangeId, Identifier, SubscriptionId}, instruments::Instrument, trade::PublicTrade
 };
+
+use crate::{exchange::bybit::subscription::BybitSubscriptionResponse, transformer::iterator::MarketIter};
 
 use super::{l2::BybitOrderBookL2, trade::BybitTrade};
 
-// #[derive(Debug, Serialize, Deserialize)]
-// #[serde(untagged)]
-// pub enum BybitMessage {
-//     Response(BybitSubscriptionResponse),
-//     Trade(BybitTrade),
-//     OrderBook(BybitOrderBookL2)
-// }
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum BybitMessage {
+    Response(BybitSubscriptionResponse),
+    Trade(BybitTrade),
+    OrderBook(BybitOrderBookL2)
+}
+
+impl Identifier<Option<SubscriptionId>> for BybitMessage {
+    fn id(&self) -> Option<SubscriptionId> {
+        match self {
+            BybitMessage::Trade(trade) => trade.id(),
+            BybitMessage::OrderBook(order_book) => order_book.id(),
+            BybitMessage::Response(pong_response) => pong_response.id(),
+        }
+    }
+}
+
+
+impl From<(ExchangeId, Instrument, BybitMessage)> for MarketIter<PublicTrade> {
+    fn from((exchange_id, instrument, message): (ExchangeId, Instrument, BybitMessage)) -> Self {
+        match message {
+            BybitMessage::Response(response) => {
+                debug!("HandlingPOONG: {:?}", response);
+                Self(vec![])
+            },
+            BybitMessage::Trade(trades) => {
+                Self(trades
+                        .data
+                        .into_iter()
+                        .map(|trade| {
+                            Ok(MarketEvent {
+                                exchange_ts: trade.exchange_ts,
+                                local_ts: Utc::now(),
+                                exchange: Exchange::from(exchange_id),
+                                instrument: instrument.clone(),
+                                kind: PublicTrade {
+                                    id: trade.id,
+                                    price: trade.price,
+                                    quantity: trade.amount,
+                                    aggressor_side: trade.side,
+                                },
+                            })
+                        })
+                        .collect(),
+            )
+            },
+            BybitMessage::OrderBook(order_book) => { Self(vec![]) },
+        }
+
+
+
+    }
+}
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Serialize, Deserialize)]
 pub struct BybitPayload<T> {

@@ -5,6 +5,7 @@ use tokio::time;
 use url::Url;
 use wednesday_model::{error::SocketError, identifiers::ExchangeId, instruments::Instrument};
 
+use crate::transformer::stateless::StatelessTransformer;
 use crate::{
     protocol::http::websocket::{PingInterval, WsMessage},
     stream::{protocol::ws_stream::ExchangeWsStream, selector::StreamSelector},
@@ -19,6 +20,7 @@ use crate::{
     transformer::{stateful::MultiBookTransformer, stateless::StatelessTransformerWithPong},
 };
 
+use self::model::message::BybitMessage;
 use self::{
     channel::BybitChannel,
     market::BybitMarket,
@@ -93,11 +95,18 @@ where
     }
 }
 
+// impl<Server> StreamSelector<PublicTrades> for Bybit<Server>
+// where
+//     Server: ExchangeServer + Debug + Send + Sync,
+// {
+//     type Stream = ExchangeWsStream<StatelessTransformerWithPong<Self, PublicTrades, BybitTrade, BybitSubscriptionResponse>>;
+// }
+
 impl<Server> StreamSelector<PublicTrades> for Bybit<Server>
 where
     Server: ExchangeServer + Debug + Send + Sync,
 {
-    type Stream = ExchangeWsStream<StatelessTransformerWithPong<Self, PublicTrades, BybitTrade, BybitSubscriptionResponse>>;
+    type Stream = ExchangeWsStream<StatelessTransformer<Self, PublicTrades, BybitMessage>>;
 }
 
 impl<Server> StreamSelector<OrderBooksL2> for Bybit<Server>
