@@ -3,6 +3,7 @@
 # |  _|     | |   | |
 # | |___    | |   | |___
 # |_____|   |_|    \____|
+resources/
 notebooks/
 .DS_Store
 docs/koscom/~$*.xlsx

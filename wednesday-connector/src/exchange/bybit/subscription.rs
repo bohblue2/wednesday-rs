@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use tracing::debug;
-use wednesday_model::error::SocketError;
+use wednesday_model::{error::SocketError, identifiers::{Identifier, SubscriptionId}};
 
 use crate::subscriber::validator::Validator;
 
@@ -30,6 +30,12 @@ pub enum BybitReturnMessage {
 impl Default for BybitReturnMessage {
     fn default() -> Self {
         Self::Empty
+    }
+}
+
+impl Identifier<Option<SubscriptionId>> for BybitSubscriptionResponse {
+    fn id(&self) -> Option<SubscriptionId> {
+        Some(SubscriptionId::from(self.req_id.clone()))
     }
 }
 

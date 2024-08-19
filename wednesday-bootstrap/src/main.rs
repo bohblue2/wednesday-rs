@@ -39,7 +39,7 @@ async fn main() {
     let mut joined = streams.join_map().await;
 
     while let Some((exchange, ob)) = joined.next().await {
-        info!(%exchange, ?ob, "Received orderbook");
+        // info!(%exchange, ?ob, "Received orderbook");
     }
 
 }

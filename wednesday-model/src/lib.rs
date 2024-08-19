@@ -11,3 +11,6 @@ pub mod instruments;
 pub mod bar;
 pub mod calculator;
 pub mod deserialization;
+pub mod position;
+pub mod account;
+pub mod trade_report;

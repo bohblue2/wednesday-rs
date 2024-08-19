@@ -1,4 +1,5 @@
 use std::marker::PhantomData;
+use std::fmt::Debug;
 
 use async_trait::async_trait;
 use serde::Deserialize;
@@ -35,7 +36,7 @@ where
     Exchange: Connector,
     Kind: SubscriptionKind<Event = OrderBook>,
     Updater: OrderBookUpdater<OrderBook = Kind::Event>,
-    Updater::Update: Identifier<Option<SubscriptionId>> + for<'de> Deserialize<'de>,
+    Updater::Update: Identifier<Option<SubscriptionId>> + for<'de> Deserialize<'de> + Debug,
 {
     type Error = DataError;
     type Input = Updater::Update;
@@ -72,7 +73,7 @@ where
     Exchange: Connector + Send,
     Kind: SubscriptionKind<Event = OrderBook> + Send,
     Updater: OrderBookUpdater<OrderBook = Kind::Event> + Send,
-    Updater::Update: Identifier<Option<SubscriptionId>> + for<'de> Deserialize<'de>,
+    Updater::Update: Identifier<Option<SubscriptionId>> + for<'de> Deserialize<'de> + Debug,
 {
     async fn new(ws_sink_tx: mpsc::UnboundedSender<WsMessage>, map: Map<Instrument>) -> Result<Self, DataError> {
         let (subscription_ids, init_book_requests): (Vec<_>, Vec<_>) = map

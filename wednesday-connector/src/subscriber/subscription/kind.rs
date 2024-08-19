@@ -1,3 +1,4 @@
+use serde::{Deserialize, Serialize};
 use wednesday_macro::{DeSubscriptionKind, SerSubscriptionKind};
 use wednesday_model::{
     bar::Bar,
